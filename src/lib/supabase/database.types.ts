@@ -16,6 +16,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_minutes: {
+        Row: {
+          course_id: string
+          created_at: string
+          date: string
+          id: string
+          lesson_id: string | null
+          seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          date: string
+          id?: string
+          lesson_id?: string | null
+          seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          lesson_id?: string | null
+          seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_minutes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_minutes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_minutes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_state: {
+        Row: {
+          created_at: string
+          last_beat_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_beat_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_beat_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -399,6 +483,61 @@ export type Database = {
           },
           {
             foreignKeyName: "external_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_task_minutes: {
+        Row: {
+          course_id: string
+          created_at: string
+          date: string
+          id: string
+          lesson_id: string | null
+          seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          date: string
+          id?: string
+          lesson_id?: string | null
+          seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          lesson_id?: string | null
+          seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_task_minutes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_task_minutes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_task_minutes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -916,7 +1055,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      course_time_stats: {
+        Row: {
+          avg_seconds_per_student: number | null
+          course_id: string | null
+          students: number | null
+          total_seconds: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_minutes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_activity: {
+        Row: {
+          active_seconds: number | null
+          date: string | null
+          estimated_external_seconds: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      lesson_time_stats: {
+        Row: {
+          avg_seconds_per_student: number | null
+          course_id: string | null
+          lesson_id: string | null
+          students: number | null
+          total_seconds: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_minutes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_minutes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_activity: {
+        Row: {
+          active_seconds: number | null
+          estimated_external_seconds: number | null
+          user_id: string | null
+          week_start: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_set_role: {
@@ -942,10 +1140,37 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      get_time_summary: {
+        Args: { p_from: string; p_to: string; p_user_id: string }
+        Returns: {
+          active_seconds: number
+          date: string
+          estimated_external_seconds: number
+        }[]
+      }
       publish_lesson: { Args: { p_lesson_id: string }; Returns: string }
       recompute_lesson_progress: {
         Args: { p_lesson_id: string; p_user_id: string }
         Returns: Database["public"]["Enums"]["progress_status"]
+      }
+      record_external_away: {
+        Args: {
+          p_course_id: string
+          p_lesson_id: string
+          p_seconds: number
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      record_heartbeat: {
+        Args: {
+          p_course_id: string
+          p_flush?: boolean
+          p_lesson_id: string
+          p_seconds: number
+          p_user_id: string
+        }
+        Returns: number
       }
       reorder_lessons: {
         Args: { p_ids: string[]; p_module_id: string }
