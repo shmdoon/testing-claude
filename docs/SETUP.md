@@ -52,9 +52,34 @@ update public.consents set status = 'granted', granted_at = now() where student_
   (select id from public.profiles where email = 'student@example.com');
 ```
 
-## 5. Tests
+## 5. Payments (Razorpay) and email (Resend)
+
+**Without keys (now):** payments run on the **mock gateway** (localhost only) and emails are logged to
+`email_log`. Everything — orders, coupons, invoices (TEST series), refunds, credit notes — works end to end.
+
+**Switch to Razorpay test mode:**
+1. Razorpay Dashboard → *Test mode* → Settings → API Keys → generate. Put `RAZORPAY_KEY_ID` (`rzp_test_…`) and
+   `RAZORPAY_KEY_SECRET` in the environment.
+2. Settings → Webhooks → *Add*: URL `https://<your-domain>/api/webhooks/razorpay`, a strong secret
+   (→ `RAZORPAY_WEBHOOK_SECRET`), events **payment.captured**, **payment.failed**, **refund.processed**.
+   (For local testing use a tunnel such as `cloudflared tunnel --url http://localhost:3000`.)
+3. Restart. `/admin/settings` shows "Payment gateway: Razorpay". The mock is disabled automatically when all three are set.
+4. Keep "Auto-capture payments" on (Settings → Payment capture) — orders are fulfilled on capture.
+
+**Go live:** generate *Live mode* keys + a live-mode webhook with the same three events, replace the three variables,
+make sure `PAYMENTS_ALLOW_MOCK` is unset/false, and do one small real purchase + refund.
+
+**Invoices:** fill in `/admin/settings` (business name, address, GSTIN, GST mode/rate, SAC) after talking to your
+accountant. New invoices use the new values; issued ones never change.
+
+**Resend:** add and verify your sending domain in Resend, set `RESEND_API_KEY` and `EMAIL_FROM`
+(e.g. `AI Learning Hub <billing@yourdomain.in>`). Also configure Resend as Supabase Auth's custom SMTP (§2).
+
+## 6. Tests
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.
+- To try buying as a parent locally, link a parent to an active student:
+  `insert into parent_student_links (parent_id, student_id, status) values ('<parent uuid>', '<student uuid>', 'active');`
 - `npm run test:e2e:live` runs signed-in flows (Studio, admin tools, catalogue) against the project in
   `.env.local`. It creates throwaway `@example.com` users/content via the secret key and deletes them afterwards.

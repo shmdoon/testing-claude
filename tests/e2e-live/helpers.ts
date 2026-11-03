@@ -31,6 +31,31 @@ export async function signIn(page: Page, email: string) {
   await page.goto(`/auth/confirm?token_hash=${data.properties.hashed_token}&type=magiclink`);
 }
 
+/**
+ * Remove a throwaway user and everything tied to them. Orders/invoices block
+ * profile deletion on purpose (tax records), so test (mock) money data is
+ * removed first — real invoices can't be deleted and would make this fail loudly.
+ */
 export async function deleteUser(id: string) {
-  await admin.auth.admin.deleteUser(id);
+  const { data: orders } = await admin.from("orders").select("id").or(`buyer_id.eq.${id},student_id.eq.${id}`);
+  const orderIds = (orders ?? []).map((o) => o.id);
+  if (orderIds.length) {
+    const { data: invs } = await admin.from("invoices").select("id, pdf_path").in("order_id", orderIds);
+    const paths = (invs ?? []).map((i) => i.pdf_path).filter(Boolean) as string[];
+    if (paths.length) await admin.storage.from("invoices").remove(paths);
+    await admin.from("invoices").delete().in("order_id", orderIds).eq("kind", "credit_note");
+    await admin.from("invoices").delete().in("order_id", orderIds);
+    await admin.from("enrollments").update({ order_id: null }).in("order_id", orderIds);
+    await admin.from("refunds").delete().in("order_id", orderIds);
+    await admin.from("payments").delete().in("order_id", orderIds);
+    await admin.from("coupon_redemptions").delete().in("order_id", orderIds);
+    await admin.from("orders").delete().in("id", orderIds);
+  }
+  const { data: user } = await admin.auth.admin.getUserById(id);
+  if (user?.user?.email) await admin.from("email_log").delete().eq("to_email", user.user.email);
+  const { data: files } = await admin.storage.from("submissions").list(id);
+  if (files?.length) await admin.storage.from("submissions").remove(files.map((f) => `${id}/${f.name}`));
+  await admin.from("audit_log").delete().eq("actor_id", id);
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) throw new Error(`cleanup of ${id} failed: ${error.message}`);
 }

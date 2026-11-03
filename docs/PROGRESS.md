@@ -84,3 +84,25 @@
 - Admin/parent analytics UI, charts and CSV export arrive in M6 (the views/RPC are ready).
 
 **Next:** Milestone 5 — payments + invoices (Razorpay orders/checkout/verify/webhook, enrolments, gap-free invoice numbers, PDF, Resend, coupons, refunds). Needs Razorpay test keys + Resend key.
+
+## Milestone 5 — Payments + invoices ✅ (2026-11-03, placeholder keys)
+
+**Done**
+- Migration `…0500_payments` (applied to live): `coupons`, `coupon_redemptions`, `orders`, `payments`, `refunds`, `invoices`, `invoice_counters`, `webhook_events`, `email_log`, private `invoices` bucket, placeholder business/tax settings; RPCs `fulfill_order`, `mark_payment_failed`, `process_refund`; gap-free FY numbering; GST math; immutable invoices.
+- Razorpay provider (REST, HMAC via Web Crypto) + mock gateway (localhost only) with identical code paths.
+- Parent checkout (`/parent/checkout/[course]`): linked child, server-side price + coupon, Razorpay Checkout or mock dialog, `/api/payments/verify`, webhook `/api/webhooks/razorpay` (signature, idempotency, retry-safe).
+- Invoices: PDF (pdf-lib), private storage, signed-URL download, email with PDF attached (Resend or log-only); credit notes on refund.
+- Parent: children list, purchases with invoice/credit-note downloads. Course pages: "Buy for ₹…" for parents, "ask your parent" for students.
+- Admin: `/admin/payments` (filters, refund with reason, CSV), `/admin/invoices` (regenerate, resend), `/admin/coupons`, `/admin/settings` (business/tax/invoice/refund settings, GST requires GSTIN). All audited.
+- Tests: 209 unit (money/words, signatures, PDF, CSV, formatting), 7 SQL suites (FY, GST, numbering rollback, idempotent fulfilment, refunds, immutability, RLS incl. editors can't see money), 17 live E2E (purchase with coupon + failed attempt + invoice PDF + email + access; refund → revoke + credit note + CSV; webhook forgery/replay; settings + coupons).
+
+**Fixed along the way**
+- `formatInr` showed ₹449.10 as "₹449.1".
+- Selects lost the user's choice after a failed submit (settings, coupons, signup class).
+
+**Known issues / notes**
+- Running on the mock gateway and log-only email until you add keys (see SETUP §5). Business/tax values are placeholders (tax mode: none).
+- Refunds are full-amount only; partial refunds can be added later.
+- Parents can buy only for linked children; links are created by the consent flow (M7). Until then, link via SQL (SETUP §6).
+
+**Next:** Milestone 6 — dashboards (student/parent/admin analytics, charts, CSV), `/admin/submissions` review queue, opt-in gallery.

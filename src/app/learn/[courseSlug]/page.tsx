@@ -57,7 +57,9 @@ export default async function LearnCoursePage({ params }: PageProps<"/learn/[cou
         (course.is_free ? (
           <EnrollButton courseId={course.id} />
         ) : (
-          <p className="rounded-2xl border-2 border-dashed p-4">{t("learn.paidSoon", { price: formatInr(course.price_paise) })}</p>
+          <p className="rounded-2xl border-2 border-dashed p-4">
+            {formatInr(course.price_paise)} · {t("pay.buyAsk")}
+          </p>
         ))
       )}
 

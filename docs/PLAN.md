@@ -57,6 +57,17 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 4.4 | External "away" time → `external_task_minutes` on return (capped 2× estimate) | e2e |
 | 4.5 | Student dashboard: "this week" active minutes + estimated external minutes (labelled) | e2e |
 
+## Milestone 5 — Payments + invoices (placeholders until keys arrive)
+
+| # | Task | Done when |
+|---|------|-----------|
+| 5.1 | Migration: `coupons`, `coupon_redemptions`, `orders`, `payments`, `refunds`, `invoices`, `invoice_counters`, `webhook_events`, `email_log`; private `invoices` bucket; default business/tax settings (placeholders); RPCs `fulfill_order` (payment + enrolment + coupon + gap-free invoice number in ONE transaction, idempotent), `mark_payment_failed`, `request_refund`/`process_refund` (revoke + credit note) | SQL tests incl. concurrency-safe numbering |
+| 5.2 | Payment provider interface: Razorpay (REST via fetch: Orders, Payments, Refunds, HMAC checks) + **mock gateway** (same code paths, localhost/opt-in only) | unit tests (signatures, money) |
+| 5.3 | Checkout (parents buy for a linked child): price + coupon server-side → order → Razorpay Checkout / mock → `/api/payments/verify` → fulfilment; webhook `/api/webhooks/razorpay` (signature, idempotent by event id) | e2e (mock) |
+| 5.4 | Invoices: GST math (inclusive; CGST+SGST / IGST / none), amount in words (Indian system), PDF (pdf-lib), private storage, signed-URL download for buyer/admin; credit notes on refund | unit + e2e |
+| 5.5 | Email: Resend REST or log-only mode; receipt + invoice, refund + credit note | e2e (log mode) |
+| 5.6 | Admin: `/admin/payments` (filters, refund, CSV), `/admin/invoices` (regenerate, resend), `/admin/coupons`, `/admin/settings`; parent purchases + invoice downloads | e2e |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.

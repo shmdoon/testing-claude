@@ -128,11 +128,11 @@ async function CourseDetail({ params }: { params: PageProps<"/courses/[slug]">["
                 </Button>
               ) : (
                 <>
-                  <Button size="lg" className="w-full" disabled aria-describedby="enroll-note">
-                    {t("courses.buy", { price: formatInr(course.price_paise) })}
+                  <Button asChild size="lg" className="w-full" aria-describedby="enroll-note">
+                    <Link href={`/parent/checkout/${course.slug}`}>{t("courses.buy", { price: formatInr(course.price_paise) })}</Link>
                   </Button>
                   <p id="enroll-note" className="text-sm text-muted-foreground">
-                    {t("courses.enrollSoon")}
+                    {t("courses.buyNote")}
                   </p>
                   <Button asChild variant="outline" className="w-full">
                     <Link href={`/learn/${course.slug}`}>{t("courses.tryPreview")}</Link>

@@ -72,6 +72,7 @@ export function StudentFields({ fieldErrors, values }: Echo) {
         <Label htmlFor="class_level">{t("auth.classLevel")}</Label>
         <select
           id="class_level"
+          key={values?.class_level ?? ""}
           name="class_level"
           required
           defaultValue={values?.class_level ?? ""}
