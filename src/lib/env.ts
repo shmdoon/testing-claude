@@ -18,6 +18,18 @@ export const serverSchema = publicSchema.extend({
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
+  // Payments (M5). Leave empty to use the mock gateway on localhost.
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  PAYMENTS_ALLOW_MOCK: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
+  // Email (M5). Leave RESEND_API_KEY empty to only log emails.
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("AI Learning Hub <onboarding@resend.dev>"),
+  SUPABASE_INVOICES_BUCKET: z.string().default("invoices"),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
