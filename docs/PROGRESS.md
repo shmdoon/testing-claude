@@ -68,3 +68,19 @@
 - Paid courses still need payments (M5); preview lessons are open to active students.
 
 **Next:** Milestone 4 — time tracking (heartbeat hook, `activity_minutes` aggregate, rate limit, sendBeacon, external "estimated" minutes aggregate, SQL views/RPCs).
+
+## Milestone 4 — Time tracking ✅ (2026-11-03)
+
+**Done**
+- Migration `…0400_tracking` (applied to live): `activity_minutes`, `external_task_minutes`, `activity_state`; `record_heartbeat` (access check, 25 s rule, credit ≤ 30 s and ≤ real elapsed), `record_external_away`; security-invoker views `daily_activity`, `weekly_activity`, `lesson_time_stats`, `course_time_stats`; `get_time_summary` RPC.
+- `useActivityTracker` (per-second active meter, 30 s heartbeats, sendBeacon flush on page hide/unmount) on lesson pages and enrolled course pages; YouTube play-state detection (`TrackedVideo`, with transcript/captions panel).
+- `/api/track/heartbeat` (session user only, Zod, same-origin, 1 KB, 204).
+- External away time aggregated separately on return; student dashboard shows "Learning time this week" + "(estimated)" external minutes.
+- Discrete learning events from M3 (lesson_started, activity_attempted/completed, reflection_saved, quiz_submitted, lesson_completed, external_task_*) continue to be logged.
+- Tests: 180 unit (meter with fake clock, payload, same-origin, IST week), 6 SQL suites (caps, 25 s rule, flush ≤ elapsed, access, aggregation, IST date, RLS on views), live E2E for heartbeats (aggregation, ignored extras, beacon flush, cross-site/junk refused) and external away time + dashboard.
+
+**Known issues / notes**
+- Bunny/Cloudflare Stream play state uses the focus heuristic (no player API wired yet).
+- Admin/parent analytics UI, charts and CSV export arrive in M6 (the views/RPC are ready).
+
+**Next:** Milestone 5 — payments + invoices (Razorpay orders/checkout/verify/webhook, enrolments, gap-free invoice numbers, PDF, Resend, coupons, refunds). Needs Razorpay test keys + Resend key.

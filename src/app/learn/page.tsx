@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Hourglass, PlayCircle } from "lucide-react";
+import { Clock, Hourglass, PlayCircle } from "lucide-react";
 import { PageHeader } from "@/components/layout/area-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { t } from "@/i18n";
 export const metadata = { title: "Dashboard" };
 
 export default async function LearnDashboard() {
-  const { user, courses, resume } = await getStudentDashboard();
+  const { user, courses, resume, time } = await getStudentDashboard();
   const name = user.profile.full_name?.split(" ")[0];
   return (
     <div className="space-y-6">
@@ -21,6 +21,21 @@ export default async function LearnDashboard() {
           <p>{t("learn.pendingConsent")}</p>
         </div>
       )}
+
+      <Card className="flex-row items-center gap-4" aria-label={t("learn.thisWeek")}>
+        <Clock className="size-8 shrink-0 text-teal" aria-hidden />
+        <div>
+          <p className="text-sm font-semibold text-muted-foreground">{t("learn.thisWeek")}</p>
+          <p className="text-2xl font-bold" data-testid="week-active">
+            {t("learn.activeMinutes", { n: time.activeMinutes })}
+          </p>
+          {time.externalMinutes > 0 && (
+            <p className="text-sm text-muted-foreground" data-testid="week-external">
+              {t("learn.externalMinutes", { n: time.externalMinutes })}
+            </p>
+          )}
+        </div>
+      </Card>
 
       {resume?.lessons && resume.courses && (
         <Card className="flex-row flex-wrap items-center gap-4 border-primary/40 bg-primary/5">

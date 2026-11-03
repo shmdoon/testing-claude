@@ -47,6 +47,16 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 3.6 | External task: launch in new tab (event), return detection → submit panel (url/screenshot/file/text), status + feedback, age/disabled fallback, gallery opt-in | e2e |
 | 3.7 | Consent gate: lesson responses/enrolment need `account_status = active` (decision S8 revised) | RLS + e2e |
 
+## Milestone 4 — Time-on-platform tracking
+
+| # | Task | Done when |
+|---|------|-----------|
+| 4.1 | Migration: `activity_minutes` (daily aggregate per user/course/lesson, IST date), `external_task_minutes` (estimated, separate), `activity_state` (one row per user: last accepted beat); `record_heartbeat` RPC: access check, 25 s rate limit, credit = min(sent, 30, server-measured elapsed) so totals can never exceed wall-clock time; `record_external_away`; security-invoker views for daily/weekly totals and per-lesson/course averages + `get_time_summary` RPC | SQL tests |
+| 4.2 | `/api/track/heartbeat`: session user only, Zod payload, same-origin check, tiny body, 204 always | unit + e2e |
+| 4.3 | `useActivityTracker`: per-second active meter (tab visible AND input in last 60 s, OR a video playing), heartbeat every 30 s, `sendBeacon` flush on page hide; video-playing signal from the YouTube iframe API + focus heuristic | unit tests with a fake clock |
+| 4.4 | External "away" time → `external_task_minutes` on return (capped 2× estimate) | e2e |
+| 4.5 | Student dashboard: "this week" active minutes + estimated external minutes (labelled) | e2e |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.

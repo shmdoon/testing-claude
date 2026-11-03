@@ -269,5 +269,26 @@ export async function getStudentDashboard() {
     return [{ ...e.courses, done, total, percent: total ? Math.round((done / total) * 100) : 0 }];
   });
   const resume = (progress ?? []).find((p) => p.status !== "completed" && p.lessons && p.courses) ?? null;
-  return { user, courses, resume };
+
+  // This week (Monday-start, India time): active minutes + estimated external minutes.
+  const weekStart = istWeekStart(new Date());
+  const { data: week } = await supabase
+    .from("weekly_activity")
+    .select("active_seconds, estimated_external_seconds")
+    .eq("user_id", user.id)
+    .eq("week_start", weekStart)
+    .maybeSingle();
+  const time = {
+    activeMinutes: Math.round((week?.active_seconds ?? 0) / 60),
+    externalMinutes: Math.round((week?.estimated_external_seconds ?? 0) / 60),
+  };
+  return { user, courses, resume, time };
+}
+
+/** Monday of the current week in India time, as YYYY-MM-DD (matches the SQL views). */
+export function istWeekStart(now: Date): string {
+  const ist = new Date(now.getTime() + 5.5 * 3600_000);
+  const day = (ist.getUTCDay() + 6) % 7; // Monday = 0
+  ist.setUTCDate(ist.getUTCDate() - day);
+  return ist.toISOString().slice(0, 10);
 }

@@ -253,6 +253,18 @@ export async function logExternalEvent(lessonId: string, id: string, kind: "star
         ? { tool_id: block.tool_id }
         : { tool_id: block.tool_id, away_seconds: capAwaySeconds(awaySeconds ?? 0, block.estimated_minutes), estimated: true },
   });
+  if (kind === "returned") {
+    // Estimated time on the external site, kept apart from active on-platform time.
+    const seconds = capAwaySeconds(awaySeconds ?? 0, block.estimated_minutes);
+    if (seconds > 0) {
+      await admin.rpc("record_external_away", {
+        p_user_id: user.id,
+        p_course_id: lesson.course_id,
+        p_lesson_id: lesson.id,
+        p_seconds: seconds,
+      });
+    }
+  }
   if (kind === "started" && !progress.activity_attempted_at) {
     await admin.from("lesson_progress").update({ activity_attempted_at: new Date().toISOString() }).eq("id", progress.id);
   }

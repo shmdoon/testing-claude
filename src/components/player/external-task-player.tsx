@@ -9,7 +9,8 @@ import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
 import { completeExternalFallback, logExternalEvent, submitExternal } from "@/lib/learn/actions";
 import type { PlayerSubmission, PlayerTool } from "@/lib/learn/queries";
-import { mediaUrl, videoEmbedUrl } from "@/content/blocks/media";
+import { mediaUrl } from "@/content/blocks/media";
+import { TrackedVideo } from "./tracked-video";
 import type { BlockOf, SubmissionType } from "@/content/blocks/schema";
 import { usePlayer } from "./context";
 import { ErrorText, Feedback, Prompt } from "./ui";
@@ -321,9 +322,7 @@ function FallbackNotice({ mode, block, toolName }: { mode: "with_parent" | "demo
       </p>
       {fb && "instructions" in fb && fb.instructions && <Markdown>{fb.instructions}</Markdown>}
       {mode === "demo_video" && fb?.kind === "demo_video" && (
-        <div className="aspect-video overflow-hidden rounded-xl border-2 bg-black">
-          <iframe src={videoEmbedUrl(fb.provider, fb.url)} title={fb.title} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" className="size-full" />
-        </div>
+        <TrackedVideo provider={fb.provider} url={fb.url} title={fb.title} captionsUrl={fb.captions_url} />
       )}
     </div>
   );

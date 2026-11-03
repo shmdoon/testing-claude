@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, CircleDot, Hourglass, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EnrollButton } from "@/components/player/enroll-button";
+import { TrackCourse } from "@/components/player/track-course";
 import { getLearnCourse, type LessonStatus } from "@/lib/learn/queries";
 import { formatInr } from "@/lib/format";
 import { t } from "@/i18n";
@@ -23,6 +24,7 @@ export default async function LearnCoursePage({ params }: PageProps<"/learn/[cou
 
   return (
     <div className="space-y-6">
+      {enrolled && <TrackCourse courseId={course.id} />}
       <Link href="/learn" className="inline-flex min-h-11 items-center font-medium text-muted-foreground hover:text-foreground">
         ← {t("nav.dashboard")}
       </Link>

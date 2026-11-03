@@ -10,6 +10,7 @@ import { setPhase } from "@/lib/learn/actions";
 import type { PlayerData } from "@/lib/learn/queries";
 import { PHASES, type Phase } from "@/content/blocks/schema";
 import { PlayerContext, type PlayerCtx } from "./context";
+import { useActivityTracker } from "@/hooks/use-activity-tracker";
 import { BlockPlayer, INTERACTIVE_TYPES } from "./registry";
 import { t } from "@/i18n";
 
@@ -128,6 +129,13 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
     },
     refresh: () => startRefresh(() => router.refresh()),
   };
+
+  // Active-time tracking for this lesson (block = first block of the current step).
+  useActivityTracker({
+    courseId: props.course.id,
+    lessonId: lesson.id,
+    blockId: step === "done" ? null : (blocksOf(step)[0]?.id ?? null),
+  });
 
   const idx = steps.indexOf(step);
   const nextStep = steps[idx + 1];

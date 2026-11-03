@@ -77,3 +77,15 @@ minors overrode a requirement. Newest at the bottom of each section.
 | P7 | URL submissions: https only, host must match the tool's `submission_domains`, IP literals rejected, DNS-resolved private/loopback/link-local/metadata IPs rejected, manual redirects (max 3, re-checked), 5 s timeout. An unreachable site is still accepted and marked for the reviewer; a policy violation is rejected. Residual risk: DNS rebinding between check and fetch — limited by the allowlist (e.g. only `*.netlify.app`). | SSRF protection without blocking kids on a slow host. |
 | P8 | "Away on external task" seconds are logged on return (`external_task_returned`, capped at 2× estimate, flagged `estimated`) and aggregated separately in M4. | Requirement E6. |
 | P9 | Staff (admin/content editor) can open any lesson in the player (their progress is stored like a student's, which doubles as QA). Tool age limits don't apply to staff. | Easy content QA. |
+
+## Time tracking (Milestone 4)
+
+| # | Decision | Why |
+|---|----------|-----|
+| T1 | The browser measures active seconds once per second (tab visible AND input in the last 60 s, OR a video playing) and sends them every 30 s; the **server credits min(sent, 30, seconds since its last accepted beat)**. Regular beats < 25 s after the last accepted one are ignored; page-hide flushes are accepted but capped by elapsed time. | A user's total can never exceed real wall-clock time, whatever a modified client sends. |
+| T2 | Days are **India time** (`Asia/Kolkata`); weeks start Monday. | Students and admin are in India; "today"/"this week" should match their calendar. |
+| T3 | `activity_minutes` keeps one row per user × day × course × lesson (`unique nulls not distinct`); course-page time has `lesson_id = null`. Only time on content the user may open is counted (enrolled/preview/staff). | Small DB (≈ a few rows per active student per day). |
+| T4 | Heartbeats go to `/api/track/heartbeat` (Route Handler), cookie session only, same-origin check (Origin/Referer), ≤1 KB body, always `204`. | sendBeacon can't set headers; CSRF-style inflation is blocked; nothing leaks. |
+| T5 | "Video playing" comes from the YouTube iframe API (`enablejsapi=1` + postMessage state events). Bunny/Cloudflare players fall back to "focus is inside the video iframe". | No third-party scripts loaded for tracking. |
+| T6 | External "away" time (launch → return, capped 2× estimate) goes to `external_task_minutes`, never mixed with active time, and is always shown with "(estimated)". | Requirement E6. |
+| T7 | Dashboards read security-invoker views (`daily_activity`, `weekly_activity`, `lesson_time_stats`, `course_time_stats`) and `get_time_summary()`, so RLS decides who sees what (self, linked parents, admins). | One access model for tables and reports. |

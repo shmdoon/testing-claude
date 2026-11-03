@@ -23,13 +23,14 @@ import { ExternalTaskPlayer } from "./external-task-player";
 import { QuizPlayer } from "./quiz-player";
 import { UploadWorkPlayer } from "./upload-player";
 import { BlockErrorBoundary } from "./block-boundary";
+import { TrackedVideo } from "./tracked-video";
 
 type StudentBlockOf<T extends BlockType> = Extract<StudentBlock, { type: T }>;
 type PlayerRegistry = { [T in BlockType]: ComponentType<{ block: StudentBlockOf<T> }> };
 
 const NO_TOOLS: Preview.PreviewContext = { tools: {} };
 const display =
-  <T extends "rich_text" | "video" | "image" | "callout" | "key_points">(C: ComponentType<Preview.PreviewProps<T>>) =>
+  <T extends "rich_text" | "image" | "callout" | "key_points">(C: ComponentType<Preview.PreviewProps<T>>) =>
   // eslint-disable-next-line react/display-name
   ({ block }: { block: StudentBlockOf<T> }) => <C block={block as never} ctx={NO_TOOLS} />;
 
@@ -45,7 +46,9 @@ export const playerRegistry: PlayerRegistry = {
   external_task: ExternalTaskPlayer,
   reflection_prompt: ReflectionPromptPlayer,
   rich_text: display(Preview.RichTextPreview),
-  video: display(Preview.VideoPreview),
+  video: ({ block }) => (
+    <TrackedVideo provider={block.provider} url={block.url} title={block.title} captionsUrl={block.captions_url} transcript={block.transcript} />
+  ),
   image: display(Preview.ImagePreview),
   callout: display(Preview.CalloutPreview),
   key_points: display(Preview.KeyPointsPreview),
