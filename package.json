@@ -14,7 +14,10 @@
     "test:e2e": "playwright test",
     "db:types": "node scripts/db-types.mjs",
     "check": "npm run lint && npm run typecheck && npm run test && npm run test:db",
-    "db:migrate": "node scripts/db-migrate.mjs"
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:seed:gen": "node scripts/gen-seed.ts",
+    "db:seed": "node scripts/db-seed.mjs",
+    "test:e2e:live": "E2E_LIVE=1 playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -27,6 +30,7 @@
     "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "react-markdown": "^10.1.0",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
@@ -42,5 +46,6 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.1.0"
-  }
+  },
+  "type": "module"
 }

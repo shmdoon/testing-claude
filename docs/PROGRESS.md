@@ -22,4 +22,26 @@
 
 **Requirement update received (external tools / tasks)** — scheduled into M2/M3/M4/M6, see `docs/PLAN.md` and decisions E1–E8.
 
-**Next:** Milestone 2 — content model + Studio (+ external tools registry and `external_task` block).
+## Milestone 2 — Content model + Studio ✅ (2026-11-03)
+
+**Done**
+- Migrations `…0200_content`, `…0210_content_storage`, `…0220_lessons_course_id_grant` (applied to live): `courses`, `modules`, `lessons`, `lesson_versions` (draft + immutable published versions), `external_tools`; RLS + column grants; staff RPCs `save_lesson_draft`, `publish_lesson`, `reorder_modules`, `reorder_lessons`, `set_course_status` (audited); public `course-media` bucket with staff-only writes.
+- Zod schemas for all 16 block types incl. `external_task` (tool id, goal, steps with screenshots, starter prompts, minutes, submission types, fallback: demo video / with parent / alternative tool), phase rules, lesson-order + publish checks.
+- Block registry (label, template, preview renderer) + safe Markdown renderer; player renderers plug in at M3.
+- Seed: "What is AI?" (mini, free, 2 lessons) and "AI Explorers" (big, ₹499, 2 × 3 lessons) using every block type, 3 external tools, and the Netlify external-task lesson with a with-parent fallback. Loaded into the live project.
+- Studio: course list/create/edit (₹ → paise, class levels, outcomes, cover upload), publish/unpublish, modules/lessons CRUD with drag-to-reorder + accessible up/down buttons, lesson editor (add/duplicate/move/delete blocks, live Zod validation, phase-grouped preview, save draft, publish → version, version history + load into editor), lesson settings (activity-first gating flag, free preview).
+- `/admin/tools` registry (enable/disable, min age, submission-domain allowlist), audited.
+- Public `/courses` with filters (class, size, price, topic — plain GET form), `/courses/[slug]` (outcomes, locked/preview lesson list, price, first-activity preview), featured courses on the landing page; cached and refreshed on publish.
+- Tests: 116 unit, 4 SQL suites, 20 offline E2E, 6 live E2E (editor builds + publishes a course end-to-end; admin tool CRUD + audit; catalogue/filters/detail/404).
+
+**Fixed along the way**
+- Forms lost user input after a failed submit (React 19 auto-reset) → values are echoed back on error (all forms incl. signup).
+- Session clients now opt out of prefetched shells (`connection()`), removing "Date.now() while prerendering" errors.
+
+**Known issues / notes**
+- Enroll/Buy buttons are disabled placeholders until enrolment (M3, free) and payments (M5).
+- Block props are edited as validated JSON (typed form editors later — C4).
+- Tool minimum ages need verifying against providers' terms (C12).
+- Seeded YouTube video is a placeholder — replace with a Class 7–8 explainer with captions.
+
+**Next:** Milestone 3 — lesson player (stepper, interactive renderers incl. external task launch/return/submit + fallback, responses, progress, enrolment for free courses).

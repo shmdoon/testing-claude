@@ -8,7 +8,9 @@
 3. Apply migrations: set `SUPABASE_PROJECT_REF` and `SUPABASE_ACCESS_TOKEN` in `.env.local`, then
    `npm run db:migrate` (`-- --dry` lists pending only). It runs over HTTPS via the Management API and records
    versions in `supabase_migrations.schema_migrations`, so `npx supabase db push` remains interchangeable.
-4. `npm run db:types` regenerates `src/lib/supabase/database.types.ts`; review the diff and commit it.
+4. Seed sample content: `npm run db:seed` (runs `supabase/seed.sql`; regenerate it from TypeScript with
+   `npm run db:seed:gen` after editing `src/content/seed/data.ts`).
+5. `npm run db:types` regenerates `src/lib/supabase/database.types.ts`; review the diff and commit it.
 
 > In the Claude cloud sandbox, Node's `fetch` needs `NODE_USE_ENV_PROXY=1` to use the egress proxy
 > (e.g. `NODE_USE_ENV_PROXY=1 npm run db:migrate`). Not needed on a normal machine.
@@ -44,3 +46,5 @@ where email = 'you@example.com';
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.
+- `npm run test:e2e:live` runs signed-in flows (Studio, admin tools, catalogue) against the project in
+  `.env.local`. It creates throwaway `@example.com` users/content via the secret key and deletes them afterwards.

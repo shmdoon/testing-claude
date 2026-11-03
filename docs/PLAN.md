@@ -23,6 +23,18 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 1.13 | Tests: Vitest unit tests, SQL RLS tests run on a throwaway local Postgres (`npm run test:db`), Playwright happy path | `npm run check` green |
 | 1.14 | CI workflow: lint, typecheck, unit, db, e2e | workflow file committed |
 
+## Milestone 2 — Content model + Studio
+
+| # | Task | Done when |
+|---|------|-----------|
+| 2.1 | Migration: `courses`, `modules`, `lessons`, `lesson_versions` (one mutable draft + immutable published versions per lesson), `external_tools`; RLS; reorder + publish RPCs (audited); public `course-media` bucket | RLS tests green, applied to live |
+| 2.2 | Zod block schemas (all 16 types incl. `external_task`), phase rules, lesson-level validation | unit tests |
+| 2.3 | Block registry (`src/content/blocks/registry.tsx`): label, kind, allowed phases, template, preview renderer — player renderers plug in in M3 | adding a type = one schema + one registry entry |
+| 2.4 | Seed authored in TypeScript, validated by Zod, compiled to `supabase/seed.sql` (2 courses, every block type, 3 external tools, one external-task lesson) | test proves coverage + seed.sql up to date |
+| 2.5 | Studio: course list/create/edit (cover upload, price in ₹ stored as paise), modules + lessons CRUD with drag-to-reorder (+ keyboard buttons), lesson editor (typed block list, per-block JSON props validated live, phase-grouped preview), save draft, publish → version, version history | Playwright happy path as editor |
+| 2.6 | `/admin/tools` registry CRUD (enable/disable, min age, allowed submission domains) | admin-only |
+| 2.7 | Public catalogue `/courses` with filters + `/courses/[slug]` detail (outcomes, lesson list locked/unlocked, price, preview of first activity), cached + invalidated on publish | e2e |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.

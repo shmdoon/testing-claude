@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { BookOpenCheck, Hand, Lightbulb, MessageCircleQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CourseCard } from "@/components/course-card";
+import { getPublishedCourses } from "@/lib/content/catalog";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { messages, t } from "@/i18n";
 
@@ -52,8 +55,10 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <h2 className="mb-4 text-3xl font-bold">{t("landing.featuredTitle")}</h2>
-        <p className="text-muted-foreground">{t("landing.featuredEmpty")}</p>
+        <h2 className="mb-6 text-3xl font-bold">{t("landing.featuredTitle")}</h2>
+        <Suspense fallback={<div className="h-80 animate-pulse rounded-2xl bg-muted" aria-hidden />}>
+          <FeaturedCourses />
+        </Suspense>
       </section>
 
       <section id="pricing" className="scroll-mt-20 bg-muted/50 py-16">
@@ -84,5 +89,20 @@ export default function LandingPage() {
         </div>
       </section>
     </>
+  );
+}
+
+/** Cached (catalog tag) — part of the static shell, refreshed on publish. */
+async function FeaturedCourses() {
+  const courses = (await getPublishedCourses()).slice(0, 3);
+  if (courses.length === 0) return <p className="text-muted-foreground">{t("landing.featuredEmpty")}</p>;
+  return (
+    <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {courses.map((c) => (
+        <li key={c.id}>
+          <CourseCard course={c} />
+        </li>
+      ))}
+    </ul>
   );
 }

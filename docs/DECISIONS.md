@@ -45,3 +45,21 @@ minors overrode a requirement. Newest at the bottom of each section.
 | E6 | "Away on external task" time = launch → return, capped at 2× estimated minutes, stored in its own aggregate (not `activity_minutes`), always labelled **estimated** in dashboards. | We can't measure time on other sites. |
 | E7 | Approving a submission marks that lesson step complete; needs-revision reopens the submit panel with the teacher's feedback. Reviewers: `admin` and `content_editor` (✅ confirmed 2026-11-03). Content editors still never see payments. | Brief has no teacher role yet. |
 | E8 | Gallery is opt-in twice: the student ticks "share in gallery" on submission, and the parent's consent covers it (togglable from `/parent`). It shows first name + class only, never email/surname. Screenshots are re-served through the app, not public bucket URLs. Can be withdrawn any time. | Minors' privacy. |
+
+## Content model & Studio (Milestone 2)
+
+| # | Decision | Why |
+|---|----------|-----|
+| C1 | Versioning: one mutable **draft** row + immutable **published** rows per lesson in `lesson_versions`. Publishing copies the draft to version n+1 and repoints `lessons.published_version_id`. A trigger blocks edits/deletes of published rows (except cascades when the lesson itself is deleted). | Students in progress keep their version (M3 stores `lesson_version_id` on progress). |
+| C2 | `lessons` holds metadata only (public for published courses); block content lives in `lesson_versions` and is readable by staff, by anyone for **free-preview** lessons, and (M3/M5) by enrolled students. | Paid content never leaks through the public API. |
+| C3 | `embed_sim` iframes: https only, host allowlist in code (`APPROVED_SIM_HOSTS`), `sandbox="allow-scripts allow-same-origin"`, no referrer. Adding a host is a code change + review. | Child safety; avoids arbitrary embeds. |
+| C4 | Studio block editor (M2): typed block list with id/phase controls and a **JSON props editor validated live by Zod**, plus a phase-grouped live preview. Purpose-built form editors per block type are a later improvement. | Ships every block type now, the schema stays the single source of truth. |
+| C5 | Block JSON is validated in the app (Zod) on save, on publish and again before rendering. The `save_lesson_draft`/`publish_lesson` RPCs are staff-only but don't re-run Zod, so invalid blocks are skipped by the renderer, not shown. | Editors are trusted staff; renderer is defensive. |
+| C6 | Positions change only through `reorder_modules`/`reorder_lessons` (full set required); course status only through `set_course_status` (needs ≥1 published lesson, audited). Only admins can delete courses. | Consistent ordering; audited publishing. |
+| C7 | Seed content is authored in TypeScript (`src/content/seed/data.ts`), validated by the same Zod schemas and compiled to `supabase/seed.sql` (`npm run db:seed:gen`); a unit test fails if seed.sql is stale. Fixed UUIDs → idempotent. | Content team can change samples safely. |
+| C8 | Public catalogue reads use a cookie-less anon client inside `"use cache"` with tag `catalog` (1 h), invalidated by `updateTag` from Studio/admin actions. Failed fetches are cached for seconds only. | Fast static pages, instant updates after publish. |
+| C9 | Unknown `/courses/[slug]` pages render the not-found page with `noindex` but HTTP 200, because the page streams (documented Next.js behaviour). | Keeps the fast streaming shell; SEO-safe via noindex. |
+| C10 | Every session-bound Supabase client calls `await connection()` first, so auth/role checks always run per request and never inside a prefetched App Shell. | Supabase token checks use the clock; also keeps role changes immediate. |
+| C11 | React 19 resets forms after each action; failed actions echo submitted values (`echoOnError`) so users never lose input. Passwords/tokens/files are never echoed. | Usability. |
+| C12 | Tool minimum ages in the seed (AI Studio 18, Stitch 18, Netlify 13) are placeholders — **verify against each provider's current terms** and adjust in `/admin/tools`. | Legal accuracy for minors. |
+| C13 | Course covers: public `course-media` bucket (2 MB, PNG/JPEG/WebP/GIF/SVG), staff-only writes via storage RLS; served through `next/image`. Student uploads will use a separate private bucket (M3). | Covers are public marketing assets; kids' work never is. |

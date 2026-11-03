@@ -44,3 +44,5 @@ next-env.d.ts
 # test artifacts
 /test-results/
 /playwright-report/
+/.next-e2e/
+/.next-e2e-live/
