@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* Dark mode is class-driven (next-themes sets `.dark` on <html>). */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens — calm neutral base, bright accents.
+ * All text/background pairs meet WCAG AA (4.5:1) in both themes.
+ */
+:root {
+  --radius: 0.875rem;
+
+  --background: oklch(0.985 0.004 250);
+  --foreground: oklch(0.22 0.03 260);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --muted: oklch(0.955 0.008 250);
+  --muted-foreground: oklch(0.47 0.03 260);
+  --border: oklch(0.9 0.012 250);
+  --input: oklch(0.86 0.015 250);
+  --ring: oklch(0.55 0.2 270);
+
+  /* Primary: confident indigo */
+  --primary: oklch(0.5 0.21 270);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.03 270);
+  --secondary-foreground: oklch(0.32 0.12 270);
+
+  /* Accents: sunny amber, fresh teal, coral */
+  --accent: oklch(0.82 0.16 75);
+  --accent-foreground: oklch(0.3 0.07 60);
+  --teal: oklch(0.6 0.12 185);
+  --coral: oklch(0.66 0.19 25);
+
+  --success: oklch(0.52 0.14 150);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.35 0.08 60);
+  --destructive: oklch(0.55 0.22 27);
+
+  /* Lesson phase colours (used by the lesson stepper) */
+  --phase-activity: var(--coral);
+  --phase-reflection: var(--teal);
+  --phase-module: var(--primary);
+  --phase-check: var(--success);
+}
+
+.dark {
+  --background: oklch(0.18 0.02 265);
+  --foreground: oklch(0.95 0.01 250);
+  --card: oklch(0.22 0.025 265);
+  --card-foreground: var(--foreground);
+  --muted: oklch(0.26 0.025 265);
+  --muted-foreground: oklch(0.74 0.02 255);
+  --border: oklch(0.32 0.03 265);
+  --input: oklch(0.38 0.03 265);
+  --ring: oklch(0.7 0.16 270);
+
+  --primary: oklch(0.72 0.15 272);
+  --primary-foreground: oklch(0.18 0.04 270);
+  --secondary: oklch(0.3 0.06 270);
+  --secondary-foreground: oklch(0.92 0.03 270);
+
+  --accent: oklch(0.83 0.15 78);
+  --accent-foreground: oklch(0.25 0.06 60);
+  --teal: oklch(0.75 0.11 185);
+  --coral: oklch(0.74 0.15 25);
+
+  --success: oklch(0.75 0.15 150);
+  --warning: oklch(0.83 0.15 78);
+  --warning-foreground: oklch(0.25 0.06 60);
+  --destructive: oklch(0.68 0.19 25);
+}
+
+@theme inline {
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-phase-activity: var(--phase-activity);
+  --color-phase-reflection: var(--phase-reflection);
+  --color-phase-module: var(--phase-module);
+  --color-phase-check: var(--phase-check);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: calc(var(--radius) - 2px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 4px);
+
+  --spacing-13: 3.25rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1.0625rem; /* 17px: comfortable for young readers */
+    line-height: 1.6;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

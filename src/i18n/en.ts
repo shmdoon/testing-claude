@@ -1,0 +1,149 @@
+/**
+ * English UI strings. Every user-facing string goes through `t()`.
+ * To add Hindi: create `hi.ts` with the same shape (`satisfies Messages`)
+ * and register it in `./index.ts`.
+ */
+export const en = {
+  common: {
+    appName: "AI Learning Hub",
+    signIn: "Sign in",
+    signUp: "Create account",
+    signOut: "Sign out",
+    continue: "Continue",
+    back: "Back",
+    loading: "Loading…",
+    toggleTheme: "Toggle dark mode",
+    skipToContent: "Skip to content",
+    comingSoon: "Coming soon",
+    email: "Email address",
+  },
+  nav: {
+    courses: "Courses",
+    howItWorks: "How it works",
+    pricing: "Pricing",
+    faq: "FAQ",
+    dashboard: "Dashboard",
+    achievements: "Achievements",
+    profile: "Profile",
+    children: "My children",
+    overview: "Overview",
+    students: "Students",
+    engagement: "Engagement",
+    payments: "Payments",
+    invoices: "Invoices",
+    coupons: "Coupons",
+    users: "Users",
+    studioCourses: "Courses",
+    mainNav: "Main navigation",
+    areaNav: "Section navigation",
+  },
+  landing: {
+    heroTitle: "Learn AI by doing, not just reading.",
+    heroSubtitle:
+      "Short, hands-on lessons for Class 7 and 8. Try an activity first, then discover the idea behind what you just did.",
+    heroCta: "Explore courses",
+    heroSecondary: "How it works",
+    howTitle: "How activity-first learning works",
+    steps: {
+      activity: { title: "Try it", body: "Start every lesson with a puzzle, sort, match or mini-build." },
+      reflect: { title: "Notice", body: "Answer one quick question: what did you notice?" },
+      module: { title: "Understand", body: "A short explanation shows the concept behind your activity." },
+      check: { title: "Check", body: "A quick quiz locks in what you learned." },
+    },
+    featuredTitle: "Featured courses",
+    featuredEmpty: "Courses are on their way.",
+    pricingTitle: "Simple pricing",
+    pricingBody: "Mini courses from a single lesson. Big courses for a whole term. Pay once, learn at your pace.",
+    faqTitle: "Questions parents ask",
+    faq: [
+      {
+        q: "Who is this for?",
+        a: "Students in Class 7 and 8 (ages 12–14). Parents can follow progress from their own dashboard.",
+      },
+      {
+        q: "Do you show ads?",
+        a: "No. There are no third-party ads or trackers anywhere on the platform.",
+      },
+      {
+        q: "Why do you need a parent's email?",
+        a: "Students are under 18, so a parent or guardian must give consent before the account is fully active.",
+      },
+    ],
+    ctaTitle: "Ready to try your first activity?",
+    ctaButton: "Get started",
+  },
+  courses: {
+    title: "Courses",
+    subtitle: "Mini courses (1–5 lessons) and big courses (multi-week).",
+    empty: "No courses published yet.",
+  },
+  auth: {
+    loginTitle: "Welcome back",
+    loginSubtitle: "We'll email you a 6-digit code (or a sign-in link).",
+    sendCode: "Email me a code",
+    codeLabel: "6-digit code",
+    verifyCode: "Verify and sign in",
+    codeSent: "If {email} has an account, we've sent it a code. Check your inbox.",
+    noCodeHint: "No email after a minute? Check spam, or create an account.",
+    useDifferentEmail: "Use a different email",
+    google: "Continue with Google",
+    or: "or",
+    noAccount: "New here?",
+    haveAccount: "Already have an account?",
+    signupTitle: "Create your account",
+    signupSubtitle: "It takes less than a minute.",
+    iAmA: "I am a…",
+    roleStudent: "Student",
+    roleParent: "Parent or guardian",
+    fullName: "Your name",
+    classLevel: "Your class",
+    classOption: "Class {n}",
+    parentEmail: "Parent or guardian's email",
+    parentEmailHelp: "We'll ask them to approve your account. We only collect what we need.",
+    createAccount: "Create account",
+    completeTitle: "Finish setting up",
+    completeSubtitle: "We need a couple of details before you can start.",
+    errors: {
+      generic: "Something went wrong. Please try again.",
+      required: "Please fill this in.",
+      invalidClass: "Choose your class.",
+      invalidEmail: "Enter a valid email address.",
+      invalidCode: "That code didn't work. Check it and try again.",
+      noAccount: "We couldn't find an account for that email. Create one instead?",
+      rateLimited: "Too many attempts. Please wait a minute and try again.",
+      suspended: "This account is suspended. Contact support.",
+      callback: "That sign-in link has expired or was already used.",
+      sameAsParent: "The parent email must be different from your own.",
+      googleDisabled: "Google sign-in is not enabled yet.",
+    },
+  },
+  learn: {
+    welcome: "Hi {name}!",
+    welcomeFallback: "Hi there!",
+    pendingConsent:
+      "We've asked your parent or guardian to approve your account. You can look around, and lessons unlock once they approve.",
+    dashboardEmpty: "You're not enrolled in any courses yet.",
+    browse: "Browse courses",
+  },
+  parent: { title: "Your children", empty: "No linked children yet." },
+  admin: { title: "Admin overview" },
+  studio: { title: "Content Studio" },
+  legal: {
+    privacy: "Privacy policy",
+    terms: "Terms of use",
+    refund: "Refund policy",
+    placeholder: "This page is a placeholder. Final text will be added after legal review.",
+  },
+  footer: {
+    tagline: "Activity-first learning for curious minds.",
+    noAds: "No ads. No trackers.",
+  },
+} as const;
+
+type Widen<T> = T extends string
+  ? string
+  : T extends readonly (infer U)[]
+    ? readonly Widen<U>[]
+    : { readonly [K in keyof T]: Widen<T[K]> };
+
+export type Messages = Widen<typeof en>;
