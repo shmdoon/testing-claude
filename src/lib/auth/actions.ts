@@ -32,6 +32,7 @@ function callbackUrl(path: string, next?: string) {
 function mapAuthError(error: AuthError): string {
   if (error.status === 429 || error.code?.includes("rate_limit")) return "rateLimited";
   if (error.code === "otp_expired" || error.code === "invalid_credentials") return "invalidCode";
+  if (error.code === "email_address_invalid") return "invalidEmail";
   return "generic";
 }
 

@@ -11,8 +11,12 @@
 - Role-gated layouts for `/learn`, `/parent`, `/admin`, `/studio` (DAL `requireArea`, role from DB), public layout, landing page, catalogue + legal placeholders, admin sub-page placeholders.
 - Tests: 53 Vitest unit tests, SQL RLS suites (2 files), 20 Playwright tests (mobile + desktop). CI workflow runs all of them.
 
+**Live project (ikypxrhivcuqsldzuhhr) — 2026-11-03**
+- Migration applied with `npm run db:migrate`; types regenerated from the live DB with `npm run db:types`.
+- Live checks passed (throwaway users, deleted afterwards): signup trigger + role clamping, pending consent row, RLS for anon/student/parent, admin RPC refused for students, rate limiter, magic-link sign-in → `/learn`, student bounced from `/admin`, sign-out.
+- Email sending is limited by Supabase's built-in mailer (`over_email_send_rate_limit` after a few sends). Needs Resend SMTP (see SETUP §2).
+
 **Known issues / notes**
-- Not yet exercised against a real Supabase project (no credentials in the sandbox) — signed-in flows need a manual check once keys are provided (see below).
 - Student accounts stay `pending_consent`; the consent email + token flow is M7. Until then the dashboard shows a banner only.
 - `@opennextjs/cloudflare` compatibility with the Node-runtime `proxy.ts` to be verified in M8.
 

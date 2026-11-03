@@ -12,8 +12,9 @@
     "test:watch": "vitest",
     "test:db": "bash scripts/test-db.sh",
     "test:e2e": "playwright test",
-    "db:types": "npx -y supabase@2 gen types typescript --project-id \"$SUPABASE_PROJECT_REF\" --schema public > src/lib/supabase/database.types.ts",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run test:db"
+    "db:types": "node scripts/db-types.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run test:db",
+    "db:migrate": "node scripts/db-migrate.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
