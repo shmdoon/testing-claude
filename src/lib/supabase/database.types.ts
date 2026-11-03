@@ -265,6 +265,115 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          id: string
+          order_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          kind: Database["public"]["Enums"]["coupon_kind"]
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["coupon_kind"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["coupon_kind"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           class_levels: number[]
@@ -333,6 +442,48 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          provider_id: string | null
+          related_id: string | null
+          related_type: string | null
+          status: string
+          subject: string
+          template: string
+          to_email: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          status: string
+          subject: string
+          template: string
+          to_email: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          status?: string
+          subject?: string
+          template?: string
+          to_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           course_id: string
@@ -370,6 +521,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
@@ -589,6 +747,143 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      invoice_counters: {
+        Row: {
+          created_at: string
+          fy: string
+          id: string
+          last_number: number
+          series: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fy: string
+          id?: string
+          last_number?: number
+          series: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fy?: string
+          id?: string
+          last_number?: number
+          series?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          buyer_email: string
+          buyer_id: string
+          buyer_name: string
+          cgst_paise: number
+          created_at: string
+          emailed_at: string | null
+          id: string
+          igst_paise: number
+          is_test: boolean
+          issued_at: string
+          kind: Database["public"]["Enums"]["invoice_kind"]
+          line_items: Json
+          number: string
+          order_id: string
+          original_invoice_id: string | null
+          pdf_path: string | null
+          provider_payment_id: string | null
+          refund_id: string | null
+          sgst_paise: number
+          student_name: string | null
+          tax_snapshot: Json
+          taxable_paise: number
+          total_paise: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_email: string
+          buyer_id: string
+          buyer_name: string
+          cgst_paise?: number
+          created_at?: string
+          emailed_at?: string | null
+          id?: string
+          igst_paise?: number
+          is_test?: boolean
+          issued_at?: string
+          kind?: Database["public"]["Enums"]["invoice_kind"]
+          line_items: Json
+          number: string
+          order_id: string
+          original_invoice_id?: string | null
+          pdf_path?: string | null
+          provider_payment_id?: string | null
+          refund_id?: string | null
+          sgst_paise?: number
+          student_name?: string | null
+          tax_snapshot: Json
+          taxable_paise: number
+          total_paise: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string
+          buyer_id?: string
+          buyer_name?: string
+          cgst_paise?: number
+          created_at?: string
+          emailed_at?: string | null
+          id?: string
+          igst_paise?: number
+          is_test?: boolean
+          issued_at?: string
+          kind?: Database["public"]["Enums"]["invoice_kind"]
+          line_items?: Json
+          number?: string
+          order_id?: string
+          original_invoice_id?: string | null
+          pdf_path?: string | null
+          provider_payment_id?: string | null
+          refund_id?: string | null
+          sgst_paise?: number
+          student_name?: string | null
+          tax_snapshot?: Json
+          taxable_paise?: number
+          total_paise?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_original_invoice_id_fkey"
+            columns: ["original_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: true
+            referencedRelation: "refunds"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       learning_events: {
         Row: {
@@ -907,6 +1202,89 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          buyer_id: string
+          coupon_id: string | null
+          course_id: string
+          created_at: string
+          currency: string
+          discount_paise: number
+          id: string
+          list_price_paise: number
+          paid_at: string | null
+          provider: string
+          provider_order_id: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          student_id: string
+          total_paise: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          coupon_id?: string | null
+          course_id: string
+          created_at?: string
+          currency?: string
+          discount_paise?: number
+          id?: string
+          list_price_paise: number
+          paid_at?: string | null
+          provider: string
+          provider_order_id?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          student_id: string
+          total_paise: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          coupon_id?: string | null
+          course_id?: string
+          created_at?: string
+          currency?: string
+          discount_paise?: number
+          id?: string
+          list_price_paise?: number
+          paid_at?: string | null
+          provider?: string
+          provider_order_id?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          student_id?: string
+          total_paise?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_student_links: {
         Row: {
           created_at: string
@@ -945,6 +1323,56 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_paise: number
+          captured_at: string | null
+          created_at: string
+          error_code: string | null
+          error_description: string | null
+          id: string
+          method: string | null
+          order_id: string
+          provider_payment_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_paise: number
+          captured_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          method?: string | null
+          order_id: string
+          provider_payment_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_paise?: number
+          captured_at?: string | null
+          created_at?: string
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          method?: string | null
+          order_id?: string
+          provider_payment_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1015,6 +1443,70 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          id: string
+          order_id: string
+          payment_id: string
+          processed_at: string | null
+          provider_refund_id: string | null
+          reason: string | null
+          requested_by: string | null
+          status: Database["public"]["Enums"]["refund_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          id?: string
+          order_id: string
+          payment_id: string
+          processed_at?: string | null
+          provider_refund_id?: string | null
+          reason?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          payment_id?: string
+          processed_at?: string | null
+          provider_refund_id?: string | null
+          reason?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           created_at: string
@@ -1052,6 +1544,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string
+          event_type: string
+          id: string
+          processed_at: string | null
+          provider: string
+          received_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1140,6 +1671,15 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      fulfill_order: {
+        Args: {
+          p_amount_paise: number
+          p_method: string
+          p_order_id: string
+          p_provider_payment_id: string
+        }
+        Returns: string
+      }
       get_time_summary: {
         Args: { p_from: string; p_to: string; p_user_id: string }
         Returns: {
@@ -1147,6 +1687,20 @@ export type Database = {
           date: string
           estimated_external_seconds: number
         }[]
+      }
+      mark_payment_failed: {
+        Args: {
+          p_amount_paise: number
+          p_code: string
+          p_description: string
+          p_order_id: string
+          p_provider_payment_id: string
+        }
+        Returns: undefined
+      }
+      process_refund: {
+        Args: { p_provider_refund_id: string; p_refund_id: string }
+        Returns: string
       }
       publish_lesson: { Args: { p_lesson_id: string }; Returns: string }
       recompute_lesson_progress: {
@@ -1209,11 +1763,16 @@ export type Database = {
       app_role: "student" | "parent" | "content_editor" | "admin"
       consent_status: "pending" | "granted" | "withdrawn" | "expired"
       content_status: "draft" | "published" | "archived"
+      coupon_kind: "percent" | "flat"
       course_type: "mini" | "big"
       enrollment_source: "free" | "purchase" | "admin"
       enrollment_status: "active" | "revoked"
+      invoice_kind: "invoice" | "credit_note"
       link_status: "pending" | "active" | "revoked"
+      order_status: "created" | "paid" | "failed" | "refunded" | "cancelled"
+      payment_status: "captured" | "failed" | "refunded"
       progress_status: "in_progress" | "awaiting_review" | "completed"
+      refund_status: "pending" | "processed" | "failed"
       submission_kind: "url" | "screenshot" | "file" | "text"
       submission_status: "submitted" | "approved" | "needs_revision"
       version_status: "draft" | "published"
@@ -1353,11 +1912,16 @@ export const Constants = {
       app_role: ["student", "parent", "content_editor", "admin"],
       consent_status: ["pending", "granted", "withdrawn", "expired"],
       content_status: ["draft", "published", "archived"],
+      coupon_kind: ["percent", "flat"],
       course_type: ["mini", "big"],
       enrollment_source: ["free", "purchase", "admin"],
       enrollment_status: ["active", "revoked"],
+      invoice_kind: ["invoice", "credit_note"],
       link_status: ["pending", "active", "revoked"],
+      order_status: ["created", "paid", "failed", "refunded", "cancelled"],
+      payment_status: ["captured", "failed", "refunded"],
       progress_status: ["in_progress", "awaiting_review", "completed"],
+      refund_status: ["pending", "processed", "failed"],
       submission_kind: ["url", "screenshot", "file", "text"],
       submission_status: ["submitted", "approved", "needs_revision"],
       version_status: ["draft", "published"],
