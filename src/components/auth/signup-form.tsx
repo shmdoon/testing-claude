@@ -24,8 +24,8 @@ export function SignupForm() {
   return (
     <form action={action} className="space-y-5" noValidate>
       <RolePicker role={role} onChange={setRole} />
-      {role === "student" ? <StudentFields fieldErrors={fe} /> : <NameField fieldErrors={fe} />}
-      <Field name="email" type="email" label={t("common.email")} autoComplete="email" error={fe.email} />
+      {role === "student" ? <StudentFields fieldErrors={fe} values={state.values} /> : <NameField fieldErrors={fe} values={state.values} />}
+      <Field name="email" type="email" label={t("common.email")} autoComplete="email" error={fe.email} defaultValue={state.values?.email} />
       <FormError code={state.error} />
       <SubmitButton>{t("auth.createAccount")}</SubmitButton>
     </form>
@@ -58,21 +58,23 @@ export function RolePicker({ role, onChange }: { role: Role; onChange: (r: Role)
   );
 }
 
-export function NameField({ fieldErrors }: { fieldErrors: Record<string, string> }) {
-  return <Field name="full_name" label={t("auth.fullName")} autoComplete="name" error={fieldErrors.full_name} />;
+type Echo = { fieldErrors: Record<string, string>; values?: Record<string, string> };
+
+export function NameField({ fieldErrors, values }: Echo) {
+  return <Field name="full_name" label={t("auth.fullName")} autoComplete="name" error={fieldErrors.full_name} defaultValue={values?.full_name} />;
 }
 
-export function StudentFields({ fieldErrors }: { fieldErrors: Record<string, string> }) {
+export function StudentFields({ fieldErrors, values }: Echo) {
   return (
     <>
-      <NameField fieldErrors={fieldErrors} />
+      <NameField fieldErrors={fieldErrors} values={values} />
       <div className="space-y-2">
         <Label htmlFor="class_level">{t("auth.classLevel")}</Label>
         <select
           id="class_level"
           name="class_level"
           required
-          defaultValue=""
+          defaultValue={values?.class_level ?? ""}
           className="h-12 w-full rounded-lg border-2 border-input bg-background px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40"
           aria-invalid={Boolean(fieldErrors.class_level)}
         >
@@ -92,6 +94,7 @@ export function StudentFields({ fieldErrors }: { fieldErrors: Record<string, str
         label={t("auth.parentEmail")}
         help={t("auth.parentEmailHelp")}
         error={fieldErrors.parent_email}
+        defaultValue={values?.parent_email}
       />
     </>
   );

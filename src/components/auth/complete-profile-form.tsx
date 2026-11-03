@@ -13,7 +13,7 @@ export function CompleteProfileForm() {
   return (
     <form action={action} className="space-y-5" noValidate>
       <RolePicker role={role} onChange={setRole} />
-      {role === "student" ? <StudentFields fieldErrors={fe} /> : <NameField fieldErrors={fe} />}
+      {role === "student" ? <StudentFields fieldErrors={fe} values={state.values} /> : <NameField fieldErrors={fe} values={state.values} />}
       <FormError code={state.error} />
       <SubmitButton>{t("common.continue")}</SubmitButton>
     </form>

@@ -1,5 +1,6 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
+import { connection } from "next/server";
 import { cookies } from "next/headers";
 import { getPublicEnv } from "@/lib/env";
 import type { Database } from "./database.types";
@@ -9,6 +10,10 @@ import type { Database } from "./database.types";
  * Use in Server Components, Server Actions and Route Handlers.
  */
 export async function createClient() {
+  // Session work (token expiry checks use the clock) always runs at request
+  // time — never inside a prerendered/prefetched shell. This also keeps role
+  // checks fresh on every request.
+  await connection();
   const env = getPublicEnv();
   const cookieStore = await cookies();
 

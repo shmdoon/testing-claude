@@ -1,5 +1,6 @@
 "use server";
 
+import { echoOnError, type FormValues } from "@/lib/forms";
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -16,6 +17,7 @@ import { homeForRole, safeNextPath } from "./roles";
 
 export type AuthFormState = {
   step: "email" | "code";
+  values?: FormValues;
   email?: string;
   next?: string;
   /** i18n key under `auth.errors` */
@@ -76,28 +78,30 @@ export async function requestLoginCode(_prev: AuthFormState, form: FormData): Pr
 
 /** Signup: creates the auth user (profile via DB trigger) and emails a code. */
 export async function requestSignupCode(_prev: AuthFormState, form: FormData): Promise<AuthFormState> {
-  const parsed = signupSchema.safeParse(formToObject(form));
-  if (!parsed.success) return { step: "email", fieldErrors: fieldErrors(parsed.error.issues) };
-  const input = parsed.data;
-  if (await limited("signup", input.email)) return { step: "email", email: input.email, error: "rateLimited" };
+  return echoOnError<AuthFormState>(form, async () => {
+    const parsed = signupSchema.safeParse(formToObject(form));
+    if (!parsed.success) return { step: "email", fieldErrors: fieldErrors(parsed.error.issues) };
+    const input = parsed.data;
+    if (await limited("signup", input.email)) return { step: "email", email: input.email, error: "rateLimited" };
 
-  const data =
-    input.role === "student"
-      ? {
-          signup_role: "student",
-          full_name: input.full_name,
-          class_level: String(input.class_level),
-          parent_email: input.parent_email,
-        }
-      : { signup_role: "parent", full_name: input.full_name };
+    const data =
+      input.role === "student"
+        ? {
+            signup_role: "student",
+            full_name: input.full_name,
+            class_level: String(input.class_level),
+            parent_email: input.parent_email,
+          }
+        : { signup_role: "parent", full_name: input.full_name };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email: input.email,
-    options: { shouldCreateUser: true, data, emailRedirectTo: callbackUrl("/auth/callback") },
-  });
-  if (error) return { step: "email", email: input.email, error: mapAuthError(error) };
-  return { step: "code", email: input.email };
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: input.email,
+      options: { shouldCreateUser: true, data, emailRedirectTo: callbackUrl("/auth/callback") },
+    });
+    if (error) return { step: "email", email: input.email, error: mapAuthError(error) };
+    return { step: "code", email: input.email };
+  }, (r) => r.step === "code");
 }
 
 /** Step 2: verify the 6-digit code and route by role. */
@@ -148,30 +152,32 @@ export async function signOut(): Promise<void> {
   redirect("/");
 }
 
-export type CompleteProfileState = { error?: string; fieldErrors?: Record<string, string> };
+export type CompleteProfileState = { ok?: boolean; error?: string; fieldErrors?: Record<string, string>; values?: FormValues };
 
 /** Finish onboarding for accounts created without details (e.g. Google). */
 export async function completeProfile(_prev: CompleteProfileState, form: FormData): Promise<CompleteProfileState> {
-  const parsed = completeProfileSchema.safeParse(formToObject(form));
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error.issues) };
-  const input = parsed.data;
+  return echoOnError<CompleteProfileState>(form, async () => {
+    const parsed = completeProfileSchema.safeParse(formToObject(form));
+    if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error.issues) };
+    const input = parsed.data;
 
-  const supabase = await createClient();
-  const { data: claims } = await supabase.auth.getClaims();
-  if (!claims?.claims?.sub) redirect("/login");
+    const supabase = await createClient();
+    const { data: claims } = await supabase.auth.getClaims();
+    if (!claims?.claims?.sub) redirect("/login");
 
-  const { error } =
-    input.role === "student"
-      ? await supabase.rpc("complete_student_profile", {
-          p_full_name: input.full_name,
-          p_class_level: input.class_level,
-          p_parent_email: input.parent_email,
-        })
-      : await supabase.rpc("complete_parent_profile", { p_full_name: input.full_name });
+    const { error } =
+      input.role === "student"
+        ? await supabase.rpc("complete_student_profile", {
+            p_full_name: input.full_name,
+            p_class_level: input.class_level,
+            p_parent_email: input.parent_email,
+          })
+        : await supabase.rpc("complete_parent_profile", { p_full_name: input.full_name });
 
-  if (error) {
-    if (error.code === "22023") return { fieldErrors: { parent_email: "sameAsParent" } };
-    return { error: "generic" };
-  }
-  redirect(input.role === "student" ? "/learn" : "/parent");
+    if (error) {
+      if (error.code === "22023") return { fieldErrors: { parent_email: "sameAsParent" } };
+      return { error: "generic" };
+    }
+    redirect(input.role === "student" ? "/learn" : "/parent");
+  });
 }
