@@ -31,7 +31,8 @@ export function CourseOutline({ courseId, initialModules }: { courseId: string; 
   const [modules, setModules] = useState(initialModules);
   const [error, setError] = useState<string>();
   const [announce, setAnnounce] = useState("");
-  const [, startTransition] = useTransition();
+  const [saving, startTransition] = useTransition();
+  const [savedOnce, setSavedOnce] = useState(false);
   const [drag, setDrag] = useState<{ kind: "module" | "lesson"; moduleId?: string; index: number } | null>(null);
 
   // Re-sync when the server sends new data (after add/delete).
@@ -51,7 +52,7 @@ export function CourseOutline({ courseId, initialModules }: { courseId: string; 
       if (res.error) {
         setModules(prev);
         setError(res.error);
-      }
+      } else setSavedOnce(true);
     });
   }
 
@@ -71,6 +72,9 @@ export function CourseOutline({ courseId, initialModules }: { courseId: string; 
     <div className="space-y-4">
       <p aria-live="polite" className="sr-only">
         {announce}
+      </p>
+      <p role="status" className="min-h-5 text-sm text-muted-foreground">
+        {saving ? "Saving order…" : savedOnce ? "Order saved" : ""}
       </p>
       {error && (
         <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">

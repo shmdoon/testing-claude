@@ -29,7 +29,7 @@ minors overrode a requirement. Newest at the bottom of each section.
 | S5 | `audit_log` is append-only (no `updated_at`, no update/delete grants). | Immutable record; the brief's `updated_at` rule doesn't fit append-only tables. |
 | S6 | Login never reveals whether an email has an account (always moves to "enter code"). | Prevents discovering which children use the platform. |
 | S7 | A student who signed up via Google with no details is `pending_profile` and must finish at `/signup/complete` (student: name/class/parent email; or parent). Only `pending_profile` accounts may switch to parent — a student awaiting consent can't, otherwise they could skip consent. | Closes a consent bypass. |
-| S8 | Students are `pending_consent` until a parent consents. M1 shows a banner; lesson content is gated when the consent flow lands (M7). | Consent email needs Resend (M7). |
+| S8 | **Revised in M3 (safer option):** students are `pending_consent` until a parent consents, and until then they can browse but **cannot enrol, open lessons or save any answers/uploads** (enforced in `can_access_lesson`, the enrolled-read RLS policy and every server action). Before the consent email ships (M7), activate a test student with the SQL in `docs/SETUP.md`. | Processing a child's learning data needs verifiable parental consent first (DPDP Act). |
 | S9 | Rate limiting uses a Postgres fixed-window counter (`consume_rate_limit`, service-role only). It fails **open** if the limiter errors; Supabase Auth's own OTP limits still apply. | Host-agnostic (no Redis/KV); one tiny table. |
 | S10 | Class levels offered at signup: 7 and 8 (`CLASS_LEVELS`); DB accepts 1–12 for future growth. | Brief scope. |
 
@@ -63,3 +63,17 @@ minors overrode a requirement. Newest at the bottom of each section.
 | C11 | React 19 resets forms after each action; failed actions echo submitted values (`echoOnError`) so users never lose input. Passwords/tokens/files are never echoed. | Usability. |
 | C12 | Tool minimum ages in the seed (AI Studio 18, Stitch 18, Netlify 13) are placeholders — **verify against each provider's current terms** and adjust in `/admin/tools`. | Legal accuracy for minors. |
 | C13 | Course covers: public `course-media` bucket (2 MB, PNG/JPEG/WebP/GIF/SVG), staff-only writes via storage RLS; served through `next/image`. Student uploads will use a separate private bucket (M3). | Covers are public marketing assets; kids' work never is. |
+
+## Lesson player (Milestone 3)
+
+| # | Decision | Why |
+|---|----------|-----|
+| P1 | Students only **read** learning tables. Enrolments, progress, responses, submissions and events are written by server actions with the service role after access checks; completion is computed in SQL (`recompute_lesson_progress`). | Scores and completion can't be forged from the browser. |
+| P2 | Quiz answers and explanations are stripped before blocks reach the browser and are graded server-side. Activities are re-graded on the server too; their content (e.g. match pairs) is visible to the browser because activities are formative. Drag-sort items are shuffled per student. | Fair quiz scores shown to parents; low-stakes activities stay instant. |
+| P3 | Activity-first is enforced server-side: until an activity is attempted, the page payload contains **only** activity blocks, and `setPhase` refuses to advance. | "Can't skip to the module" is real, not just hidden UI. |
+| P4 | Progress is pinned to the lesson version a student started; they keep it (and RLS lets them read it) even after a new version is published. | Brief requirement. |
+| P5 | Lesson completion = every interactive block complete. External tasks complete only on **approval**; with only reviews pending the lesson is `awaiting_review`. Demo-video fallbacks, and tasks whose tool is unusable with no fallback, complete on acknowledgement so nobody is stuck. | "Approval completes the lesson step." |
+| P6 | Uploads (upload_work, screenshots, files): ≤5 MB, type checked by magic bytes (PNG/JPEG/WebP, PDF where allowed — never SVG/HTML), EXIF/XMP/GPS stripped in pure JS, stored in the private `submissions` bucket under `user_id/`. | Children's photos often contain home location. |
+| P7 | URL submissions: https only, host must match the tool's `submission_domains`, IP literals rejected, DNS-resolved private/loopback/link-local/metadata IPs rejected, manual redirects (max 3, re-checked), 5 s timeout. An unreachable site is still accepted and marked for the reviewer; a policy violation is rejected. Residual risk: DNS rebinding between check and fetch — limited by the allowlist (e.g. only `*.netlify.app`). | SSRF protection without blocking kids on a slow host. |
+| P8 | "Away on external task" seconds are logged on return (`external_task_returned`, capped at 2× estimate, flagged `estimated`) and aggregated separately in M4. | Requirement E6. |
+| P9 | Staff (admin/content editor) can open any lesson in the player (their progress is stored like a student's, which doubles as QA). Tool age limits don't apply to staff. | Easy content QA. |

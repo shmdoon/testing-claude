@@ -45,3 +45,26 @@
 - Seeded YouTube video is a placeholder — replace with a Class 7–8 explainer with captions.
 
 **Next:** Milestone 3 — lesson player (stepper, interactive renderers incl. external task launch/return/submit + fallback, responses, progress, enrolment for free courses).
+
+## Milestone 3 — Lesson player ✅ (2026-11-03)
+
+**Done**
+- Migration `…0300_learning` (applied to live): `enrollments`, `lesson_progress` (pinned to a version), `block_responses`, `external_submissions`, `learning_events`, private `submissions` bucket; `recompute_lesson_progress` (completion in SQL) and `review_submission` (staff; approval completes the step; audited). Students only read; all writes are server-side after access checks.
+- Free enrolment (`/learn/[course]`), course map with per-lesson status and progress bar, dashboard with "continue where you left off" and course progress; public course page "Start learning for free" / "Try the free preview lesson".
+- Lesson player stepper: Try it → Notice → Understand → Check → Done. Activity-first enforced on the server (module/check content isn't sent until the activity is attempted). Resumes at the step that still needs work.
+- Interactive players for every block type via a registry (drag-sort with keyboard buttons, match pairs, fill-in-the-blanks, predict-then-reveal, explore choices, sandboxed simulation, upload work, checklist, reflection, quiz with server grading + retry), each wrapped in an error boundary.
+- External tasks: launch in a new tab (`noopener noreferrer`, event logged), return detected → submit panel (link / screenshot / file / text), status + teacher feedback + resubmission, gallery opt-in, age/disabled fallbacks (with parent, demo video, alternative tool, or acknowledge-and-continue).
+- Safety: quiz answers never sent to the browser; uploads type-sniffed and EXIF/GPS-stripped; URL submissions checked against the tool allowlist with private-IP/redirect protection; per-user rate limits on all player actions; pending-consent students blocked from enrolling/saving (S8 revised).
+- Tests: 164 unit, 5 SQL suites, 20 offline E2E, 11 live E2E (full lesson incl. gating + quiz retry; external task launch/return/screenshot EXIF strip/revision/URL/approval; age fallback; consent + enrolment gates; every activity type; studio; admin tools; catalogue). Live suite now cleans up after aborted runs.
+
+**Fixed along the way**
+- Match-pairs crashed the whole lesson (event read in a deferred updater) → fixed + per-block error boundaries.
+- Upload/link forms were reset by React after failed submits → typed links and chosen files are kept on error.
+- Studio reorder now shows "Saving order… / Order saved".
+
+**Known issues / notes**
+- The teacher review UI (`/admin/submissions`) and gallery page come in M6; reviews work today via the `review_submission` RPC (used by the tests).
+- Away-on-external-task seconds are logged per return; aggregation + dashboards in M4/M6.
+- Paid courses still need payments (M5); preview lessons are open to active students.
+
+**Next:** Milestone 4 — time tracking (heartbeat hook, `activity_minutes` aggregate, rate limit, sendBeacon, external "estimated" minutes aggregate, SQL views/RPCs).

@@ -42,7 +42,17 @@ update public.profiles set role = 'admin', account_status = 'active'
 where email = 'you@example.com';
 ```
 
-## 4. Tests
+## 4. Activate a test student (until the consent email ships in M7)
+
+Students can't enrol or save work until a parent consents. To try the player with a test student:
+
+```sql
+update public.profiles set account_status = 'active' where email = 'student@example.com';
+update public.consents set status = 'granted', granted_at = now() where student_id =
+  (select id from public.profiles where email = 'student@example.com');
+```
+
+## 5. Tests
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.

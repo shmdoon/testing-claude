@@ -72,6 +72,7 @@ test("editor builds, publishes and sees a course in the catalogue", async ({ pag
   await page.getByRole("link", { name: `E2E Course ${RUN}` }).click();
   await page.getByRole("button", { name: "Move First lesson up" }).click();
   await expect(page.getByTestId("module").first().getByRole("link").first()).toHaveText("First lesson");
+  await expect(page.getByText("Order saved")).toBeVisible();
   await page.reload();
   await expect(page.getByTestId("module").first().getByRole("link").first()).toHaveText("First lesson");
 

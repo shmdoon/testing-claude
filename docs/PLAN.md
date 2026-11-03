@@ -35,6 +35,18 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 2.6 | `/admin/tools` registry CRUD (enable/disable, min age, allowed submission domains) | admin-only |
 | 2.7 | Public catalogue `/courses` with filters + `/courses/[slug]` detail (outcomes, lesson list locked/unlocked, price, preview of first activity), cached + invalidated on publish | e2e |
 
+## Milestone 3 — Lesson player
+
+| # | Task | Done when |
+|---|------|-----------|
+| 3.1 | Migration: `enrollments`, `lesson_progress` (pinned to a version), `block_responses`, `external_submissions`, `learning_events`; private `submissions` bucket; access helper; `review_submission` + `recompute_lesson_progress`. Students only READ their rows; all writes go through server actions (service role) after access checks, so scores can't be forged. | RLS tests |
+| 3.2 | Grading (pure, shared): activities graded on the server from the stored block; quiz answers stripped before sending to the browser and graded server-side | unit tests |
+| 3.3 | Safety libs: EXIF/GPS stripping for uploaded photos (JPEG/PNG/WebP, pure JS), magic-byte type sniffing, SSRF-safe URL check (https, tool allowlist, private-IP block, manual redirects, 5 s timeout) | unit tests |
+| 3.4 | Free enrolment (active students only), `/learn/[course]` course map with progress, dashboard "continue where you left off" | e2e |
+| 3.5 | Lesson player stepper Activity → Reflection → Module → Check → Done with activity-first gating; interactive renderers for every block type via the registry | e2e |
+| 3.6 | External task: launch in new tab (event), return detection → submit panel (url/screenshot/file/text), status + feedback, age/disabled fallback, gallery opt-in | e2e |
+| 3.7 | Consent gate: lesson responses/enrolment need `account_status = active` (decision S8 revised) | RLS + e2e |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.
