@@ -7,7 +7,7 @@ export default function StudioLayout({ children }: LayoutProps<"/studio">) {
     <AreaShell
       area="studio"
       label={t("studio.title")}
-      nav={[{ href: "/studio", label: t("nav.studioCourses"), icon: <BookOpen />, exact: true }]}
+      nav={[{ href: "/studio", label: t("nav.studioCourses"), icon: <BookOpen /> }]}
     >
       {children}
     </AreaShell>
