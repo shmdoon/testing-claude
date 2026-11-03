@@ -885,6 +885,69 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          child_class: number | null
+          click_id_type: string | null
+          consent_at: string | null
+          created_at: string
+          id: string
+          interest: string | null
+          landing_path: string | null
+          marketing_consent: boolean
+          parent_email: string
+          parent_name: string | null
+          referrer_host: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          child_class?: number | null
+          click_id_type?: string | null
+          consent_at?: string | null
+          created_at?: string
+          id?: string
+          interest?: string | null
+          landing_path?: string | null
+          marketing_consent?: boolean
+          parent_email: string
+          parent_name?: string | null
+          referrer_host?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          child_class?: number | null
+          click_id_type?: string | null
+          consent_at?: string | null
+          created_at?: string
+          id?: string
+          interest?: string | null
+          landing_path?: string | null
+          marketing_consent?: boolean
+          parent_email?: string
+          parent_name?: string | null
+          referrer_host?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       learning_events: {
         Row: {
           block_id: string | null
@@ -1380,6 +1443,7 @@ export type Database = {
       profiles: {
         Row: {
           account_status: Database["public"]["Enums"]["account_status"]
+          acquisition: Json | null
           class_level: number | null
           created_at: string
           email: string
@@ -1392,6 +1456,7 @@ export type Database = {
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["account_status"]
+          acquisition?: Json | null
           class_level?: number | null
           created_at?: string
           email: string
@@ -1404,6 +1469,7 @@ export type Database = {
         }
         Update: {
           account_status?: Database["public"]["Enums"]["account_status"]
+          acquisition?: Json | null
           class_level?: number | null
           created_at?: string
           email?: string
@@ -1768,6 +1834,7 @@ export type Database = {
       enrollment_source: "free" | "purchase" | "admin"
       enrollment_status: "active" | "revoked"
       invoice_kind: "invoice" | "credit_note"
+      lead_status: "new" | "contacted" | "converted" | "unsubscribed"
       link_status: "pending" | "active" | "revoked"
       order_status: "created" | "paid" | "failed" | "refunded" | "cancelled"
       payment_status: "captured" | "failed" | "refunded"
@@ -1917,6 +1984,7 @@ export const Constants = {
       enrollment_source: ["free", "purchase", "admin"],
       enrollment_status: ["active", "revoked"],
       invoice_kind: ["invoice", "credit_note"],
+      lead_status: ["new", "contacted", "converted", "unsubscribed"],
       link_status: ["pending", "active", "revoked"],
       order_status: ["created", "paid", "failed", "refunded", "cancelled"],
       payment_status: ["captured", "failed", "refunded"],
