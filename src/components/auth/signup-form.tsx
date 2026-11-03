@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { requestSignupCode, type AuthFormState } from "@/lib/auth/actions";
-import { CLASS_LEVELS } from "@/lib/validation/auth";
+import { CLASS_LEVELS } from "@/lib/class-levels";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CodeForm } from "./code-form";

@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-/** Class levels offered at signup. Initially Class 7 and 8 (see brief). */
-export const CLASS_LEVELS = [7, 8] as const;
+import { CLASS_LEVELS } from "@/lib/class-levels";
+
+export { CLASS_LEVELS };
 
 const email = z
   .string()

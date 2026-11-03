@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { setPhase } from "@/lib/learn/actions";
 import type { PlayerData } from "@/lib/learn/queries";
-import { PHASES, type Phase } from "@/content/blocks/schema";
+import { PHASES, type Phase } from "@/content/blocks/phases";
 import { PlayerContext, type PlayerCtx } from "./context";
 import { useActivityTracker } from "@/hooks/use-activity-tracker";
 import { BlockPlayer, INTERACTIVE_TYPES } from "./registry";

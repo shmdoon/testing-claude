@@ -11,8 +11,9 @@
  */
 import { z } from "zod";
 
-export const PHASES = ["activity", "reflection", "module", "check"] as const;
-export type Phase = (typeof PHASES)[number];
+import { PHASES, type Phase } from "./phases.ts";
+
+export { PHASES, type Phase };
 
 export const SUBMISSION_TYPES = ["url", "screenshot", "file", "text"] as const;
 export type SubmissionType = (typeof SUBMISSION_TYPES)[number];
