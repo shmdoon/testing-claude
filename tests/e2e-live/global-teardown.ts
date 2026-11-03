@@ -18,4 +18,6 @@ export default async function globalTeardown() {
   // Test-only gateway artefacts.
   await admin.from("webhook_events").delete().eq("provider", "mock");
   await admin.from("coupons").delete().like("code", "E2E%");
+  await admin.from("leads").delete().like("parent_email", "e2e-%@example.com");
+  await admin.from("email_log").delete().like("to_email", "e2e-%@example.com");
 }

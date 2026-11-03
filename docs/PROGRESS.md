@@ -105,4 +105,15 @@
 - Refunds are full-amount only; partial refunds can be added later.
 - Parents can buy only for linked children; links are created by the consent flow (M7). Until then, link via SQL (SETUP §6).
 
+## Marketing landing page ✅ (2026-11-03, requested between milestones)
+
+**Done**
+- New parent-facing `/`: hero with lesson illustration, trust points, why activity-first, how a lesson works, courses + live prices from the catalogue, a real activity preview, parent features, "safe by design", FAQ, free-lesson lead form, final CTA, sticky mobile CTA.
+- Campaign variants `/lp/<key>` from `src/content/marketing.ts` (noindex, canonical `/`, real 404 for unknown keys).
+- First-touch UTM attribution cookie → leads and signups (`profiles.acquisition`); `leads` table (migration `…0600_marketing`, applied to live); lead form with adult confirmation, marketing consent, honeypot, rate limits, welcome email.
+- `/admin/leads` (per-campaign summary, list, CSV). Optional GA4 / Google Ads / Meta Pixel, consent-gated and landing-page-only.
+- SEO: metadata, Open Graph image, JSON-LD (organisation, FAQ, courses), sitemap, robots.
+- Lighthouse (mobile, landing): performance 90–93, accessibility 100, best practices 100, SEO 100 (removed Zod from client bundles).
+- Tests: 213 unit, 8 SQL suites, 28 offline E2E (landing, lead validation, campaign variants, attribution cookie, robots/sitemap/OG), live E2E for the lead funnel.
+
 **Next:** Milestone 6 — dashboards (student/parent/admin analytics, charts, CSV), `/admin/submissions` review queue, opt-in gallery.

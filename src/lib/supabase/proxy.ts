@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicEnv } from "@/lib/env";
 import { areaForPath } from "@/lib/auth/roles";
+import { campaigns } from "@/content/marketing";
+import { ATTRIBUTION_COOKIE, ATTRIBUTION_MAX_AGE, attributionFromUrl, encodeAttribution } from "@/lib/marketing/attribution";
 import type { Database } from "./database.types";
 
 /**
@@ -10,6 +12,12 @@ import type { Database } from "./database.types";
  * each area's layout via the DAL (they need a DB read).
  */
 export async function updateSession(request: NextRequest) {
+  // Unknown ad-campaign slugs → a real 404 status (pages stream, so the page itself can't change it).
+  const lp = request.nextUrl.pathname.match(/^\/lp\/([^/]+)\/?$/);
+  if (lp && !Object.hasOwn(campaigns, decodeURIComponent(lp[1]!))) {
+    return NextResponse.rewrite(new URL("/_campaign-not-found", request.url));
+  }
+
   const env = getPublicEnv();
   let response = NextResponse.next({ request });
 
@@ -43,6 +51,20 @@ export async function updateSession(request: NextRequest) {
     const redirect = NextResponse.redirect(url);
     for (const c of response.cookies.getAll()) redirect.cookies.set(c);
     return redirect;
+  }
+
+  // First-touch campaign attribution (only set once; httpOnly, first-party).
+  if (request.method === "GET" && !request.cookies.has(ATTRIBUTION_COOKIE)) {
+    const attr = attributionFromUrl(request.nextUrl, request.headers.get("referer"));
+    if (attr) {
+      response.cookies.set(ATTRIBUTION_COOKIE, encodeAttribution(attr), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: request.nextUrl.protocol === "https:",
+        maxAge: ATTRIBUTION_MAX_AGE,
+        path: "/",
+      });
+    }
   }
 
   return response;

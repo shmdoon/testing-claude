@@ -2,6 +2,8 @@
 
 import { echoOnError, type FormValues } from "@/lib/forms";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { ATTRIBUTION_COOKIE, decodeAttribution } from "@/lib/marketing/attribution";
 import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getServerEnv } from "@/lib/env.server";
@@ -84,7 +86,9 @@ export async function requestSignupCode(_prev: AuthFormState, form: FormData): P
     const input = parsed.data;
     if (await limited("signup", input.email)) return { step: "email", email: input.email, error: "rateLimited" };
 
-    const data =
+    const attr = decodeAttribution((await cookies()).get(ATTRIBUTION_COOKIE)?.value);
+    const acquisition = attr ? { utm_source: attr.utm_source, utm_medium: attr.utm_medium, utm_campaign: attr.utm_campaign } : undefined;
+    const base =
       input.role === "student"
         ? {
             signup_role: "student",
@@ -93,6 +97,7 @@ export async function requestSignupCode(_prev: AuthFormState, form: FormData): P
             parent_email: input.parent_email,
           }
         : { signup_role: "parent", full_name: input.full_name };
+    const data = acquisition ? { ...base, acquisition } : base;
 
     const supabase = await createClient();
     const { error } = await supabase.auth.signInWithOtp({

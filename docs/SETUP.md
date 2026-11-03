@@ -75,7 +75,21 @@ accountant. New invoices use the new values; issued ones never change.
 **Resend:** add and verify your sending domain in Resend, set `RESEND_API_KEY` and `EMAIL_FROM`
 (e.g. `AI Learning Hub <billing@yourdomain.in>`). Also configure Resend as Supabase Auth's custom SMTP (§2).
 
-## 6. Tests
+## 6. Marketing & ads
+
+- **Landing pages:** `/` (main, indexed) and campaign variants `/lp/ai-for-kids`, `/lp/future-skills`, `/lp/screen-time`
+  (not indexed). Edit or add variants, testimonials (real ones only) and stats in `src/content/marketing.ts`.
+- **Ad links:** always add UTM tags, e.g.
+  `https://<domain>/lp/ai-for-kids?utm_source=google&utm_medium=cpc&utm_campaign=ai-for-kids-nov`
+  (Meta: `utm_source=meta&utm_medium=paid_social`). The first tagged visit is remembered for 90 days and shows up
+  on leads and signups. See results at `/admin/leads` (grouped by campaign; CSV export).
+- **Tags (optional):** set `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_ADS_ID` + `NEXT_PUBLIC_GOOGLE_ADS_LEAD_LABEL`
+  (conversion action for leads) and/or `NEXT_PUBLIC_META_PIXEL_ID`. They load only on the landing pages, after the
+  visitor accepts cookies, and never for signed-in users. The lead form fires `generate_lead` / Google Ads conversion / Meta `Lead`.
+- **Before running ads:** replace the legal placeholders (privacy, terms, refund) — ad platforms check these pages —
+  and mention cookies/ads measurement in the privacy policy.
+
+## 7. Tests
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.

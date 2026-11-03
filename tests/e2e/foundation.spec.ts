@@ -1,18 +1,65 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("public pages", () => {
-  test("landing page explains activity-first learning and links to signup", async ({ page }) => {
+  test("parent landing page: hero, how it works, safety, FAQ, lead form, sticky CTA", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Learn AI by doing");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your child won't just use AI. They'll understand it.");
     await expect(page.getByRole("heading", { name: "How activity-first learning works" })).toBeVisible();
     for (const step of ["Try it", "Notice", "Understand", "Check"]) {
       await expect(page.getByRole("heading", { name: step, exact: true })).toBeVisible();
     }
-    // Session-dependent header streams in after the static shell.
+    await expect(page.getByRole("heading", { name: "Safe by design" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Questions parents ask" })).toBeVisible();
+    await expect(page.getByRole("form", { name: "Get a free sample lesson" })).toBeVisible();
+    // Structured data for search engines.
+    const ld = await page.locator('script[type="application/ld+json"]').first().textContent();
+    expect(JSON.parse(ld!)).toEqual(expect.arrayContaining([expect.objectContaining({ "@type": "FAQPage" })]));
+    // No ad/analytics tags when none are configured.
+    await expect(page.locator('script[src*="googletagmanager"], script#meta-pixel')).toHaveCount(0);
+    // Header still offers signup.
     await expect(page.getByRole("banner").getByRole("link", { name: "Create account" })).toBeVisible();
-    await page.getByRole("link", { name: "Get started" }).click();
-    await expect(page).toHaveURL(/\/signup$/);
-    await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+  });
+
+  test("lead form validates before saving", async ({ page }) => {
+    await page.goto("/");
+    const form = page.getByRole("form", { name: "Get a free sample lesson" });
+    await form.getByLabel("Your email (parent or guardian)").fill("not-an-email");
+    await form.getByRole("button", { name: "Send me the free lesson" }).click();
+    await expect(form.getByText("Enter a valid email address.")).toBeVisible();
+    await expect(form.getByText("Please confirm you're a parent or guardian.")).toBeVisible();
+    await expect(form.getByLabel("Your email (parent or guardian)")).toHaveValue("not-an-email");
+  });
+
+  test("campaign landing variants are noindex and canonical to /", async ({ page }) => {
+    await page.goto("/lp/screen-time?utm_source=meta&utm_campaign=screen");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Turn screen time into building time");
+    await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /^https?:\/\/[^/]+\/?$/);
+    const res = await page.goto("/lp/not-a-campaign");
+    expect(res?.status()).toBe(404);
+  });
+
+  test("first-touch attribution cookie is set from UTM links (httpOnly)", async ({ page, context }) => {
+    await page.goto("/lp/ai-for-kids?utm_source=google&utm_medium=cpc&utm_campaign=launch&gclid=abc");
+    const c = (await context.cookies()).find((x) => x.name === "alh_attr");
+    expect(c?.httpOnly).toBe(true);
+    const decoded = JSON.parse(Buffer.from(c!.value, "base64url").toString());
+    expect(decoded).toMatchObject({ utm_source: "google", utm_medium: "cpc", utm_campaign: "launch", click_id_type: "gclid", landing_path: "/lp/ai-for-kids" });
+    expect(c!.value).not.toContain("abc");
+    // First touch wins.
+    await page.goto("/?utm_source=other");
+    expect((await context.cookies()).find((x) => x.name === "alh_attr")?.value).toBe(c!.value);
+  });
+
+  test("robots.txt and sitemap.xml", async ({ request }) => {
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toContain("Disallow: /learn");
+    expect(robots).toContain("Disallow: /lp/");
+    expect(robots).toContain("Sitemap:");
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    expect(sitemap).toContain("<loc>");
+    const og = await request.get("/opengraph-image");
+    expect(og.headers()["content-type"]).toContain("image/png");
   });
 
   test("legal pages and catalogue render", async ({ page }) => {

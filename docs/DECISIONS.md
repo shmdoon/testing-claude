@@ -104,3 +104,15 @@ minors overrode a requirement. Newest at the bottom of each section.
 | M8 | Refunds: admin-initiated, full amount only for now; recorded + audited before calling the gateway; on `refund.processed` (webhook) → order refunded, enrolment revoked, credit note issued + emailed. One open refund per order. | Brief §7.5. |
 | M9 | Email via Resend REST; without `RESEND_API_KEY` emails are logged only. `email_log` stores recipient, template, subject, status — never bodies. | Placeholder-friendly; minimal data. |
 | M10 | Content editors can never read orders, payments, invoices or coupons (RLS). Admin CSV export is audited and protected against spreadsheet formula injection. | Brief §3; data hygiene. |
+
+## Marketing landing page & campaigns
+
+| # | Decision | Why |
+|---|----------|-----|
+| MK1 | `/` is a parent-facing landing page; ad campaigns get variants at `/lp/<key>` configured in `src/content/marketing.ts` (headline, sub-headline, CTA, meta). Variants are `noindex` with canonical `/`; unknown keys return a real 404 (checked in the proxy, since `dynamicParams` isn't available with Cache Components). | Marketers can add an ad-specific page without code changes elsewhere; no duplicate-content SEO issues. |
+| MK2 | Ad/analytics tags (GA4, Google Ads, Meta Pixel) are optional env IDs, load **only on `/` and `/lp/*`**, only after cookie consent, and **never for signed-in users**. Not on `/signup`, `/login`, `/courses` or any app area — children visit those. Only the parent lead form reports a conversion. | Brief: no third-party trackers for students; DPDP consent. |
+| MK3 | First-touch attribution: UTM params (+ only the *type* of click id, never its value) captured by the proxy into an httpOnly first-party cookie (90 days), attached to leads (full UTM set) and to signups (`profiles.acquisition`: source/medium/campaign only). | Measure campaigns without third-party cookies or personal identifiers. |
+| MK4 | Leads: parent email (+ optional name, child's class), mandatory "I'm a parent/guardian (18+)" confirmation, optional marketing consent (timestamped), honeypot + IP/email rate limits, welcome email with the free-course link. Admin view + audited CSV. | Collect from adults only; consent recorded. |
+| MK5 | No invented social proof: testimonials and stats render only when real entries are added to `src/content/marketing.ts`. | Honesty; advertising standards. |
+| MK6 | SEO: metadata + Open Graph/Twitter, generated share image (`opengraph-image.tsx`), JSON-LD (EducationalOrganization, FAQPage, Course list with INR offers), `sitemap.xml`, `robots.txt` (app areas, API and `/lp/` disallowed). | Organic + social sharing. |
+| MK7 | Performance: client bundles must not import Zod modules (constants like `CLASS_LEVELS`, `PHASES` live in zod-free files). Landing mobile Lighthouse went 74 → 90–93. | Brief: Lighthouse mobile ≥ 85. |

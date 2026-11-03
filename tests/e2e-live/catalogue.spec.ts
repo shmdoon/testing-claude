@@ -26,7 +26,7 @@ test("course detail shows outcomes, locked lessons, price and the preview activi
 
 test("landing page features published courses", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Featured courses" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What your child will learn" })).toBeVisible();
   await expect(page.getByRole("link", { name: /What is AI\?/ })).toBeVisible();
 });
 
