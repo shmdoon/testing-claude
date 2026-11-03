@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, Lock, PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -121,12 +122,23 @@ async function CourseDetail({ params }: { params: PageProps<"/courses/[slug]">["
             <CourseCover path={course.cover_image_path} />
             <div className="space-y-4 p-6">
               <p className="text-3xl font-bold">{course.is_free ? t("courses.free") : formatInr(course.price_paise)}</p>
-              <Button size="lg" className="w-full" disabled aria-describedby="enroll-note">
-                {course.is_free ? t("courses.enroll") : t("courses.buy", { price: formatInr(course.price_paise) })}
-              </Button>
-              <p id="enroll-note" className="text-sm text-muted-foreground">
-                {t("courses.enrollSoon")}
-              </p>
+              {course.is_free ? (
+                <Button asChild size="lg" className="w-full">
+                  <Link href={`/learn/${course.slug}`}>{t("courses.enroll")}</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button size="lg" className="w-full" disabled aria-describedby="enroll-note">
+                    {t("courses.buy", { price: formatInr(course.price_paise) })}
+                  </Button>
+                  <p id="enroll-note" className="text-sm text-muted-foreground">
+                    {t("courses.enrollSoon")}
+                  </p>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href={`/learn/${course.slug}`}>{t("courses.tryPreview")}</Link>
+                  </Button>
+                </>
+              )}
               <p className="text-sm text-muted-foreground">{t("courses.lessons", { n: lessons.length })}</p>
             </div>
           </Card>

@@ -1,31 +1,71 @@
 import Link from "next/link";
-import { Hourglass } from "lucide-react";
+import { Hourglass, PlayCircle } from "lucide-react";
 import { PageHeader } from "@/components/layout/area-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription } from "@/components/ui/card";
-import { requireArea } from "@/lib/auth/dal";
+import { CourseCover } from "@/components/course-card";
+import { getStudentDashboard } from "@/lib/learn/queries";
 import { t } from "@/i18n";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function LearnDashboard() {
-  const { profile } = await requireArea("learn", "/learn");
-  const name = profile.full_name?.split(" ")[0];
+  const { user, courses, resume } = await getStudentDashboard();
+  const name = user.profile.full_name?.split(" ")[0];
   return (
     <div className="space-y-6">
       <PageHeader title={name ? t("learn.welcome", { name }) : t("learn.welcomeFallback")} />
-      {profile.account_status === "pending_consent" && (
+      {user.profile.account_status === "pending_consent" && (
         <div role="status" className="flex gap-3 rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">
           <Hourglass className="mt-0.5 size-6 shrink-0" aria-hidden />
           <p>{t("learn.pendingConsent")}</p>
         </div>
       )}
-      <Card className="items-start">
-        <CardDescription>{t("learn.dashboardEmpty")}</CardDescription>
-        <Button asChild>
-          <Link href="/courses">{t("learn.browse")}</Link>
-        </Button>
-      </Card>
+
+      {resume?.lessons && resume.courses && (
+        <Card className="flex-row flex-wrap items-center gap-4 border-primary/40 bg-primary/5">
+          <PlayCircle className="size-10 text-primary" aria-hidden />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-muted-foreground">{t("learn.continue")}</p>
+            <p className="text-lg font-bold">{resume.lessons.title}</p>
+            <p className="text-sm text-muted-foreground">{resume.courses.title}</p>
+          </div>
+          <Button asChild size="lg">
+            <Link href={`/learn/${resume.courses.slug}/${resume.lessons.slug}`}>{t("learn.resume")}</Link>
+          </Button>
+        </Card>
+      )}
+
+      <section aria-labelledby="my-courses" className="space-y-3">
+        <h2 id="my-courses" className="text-2xl font-bold">
+          {t("learn.myCourses")}
+        </h2>
+        {courses.length === 0 ? (
+          <Card className="items-start">
+            <CardDescription>{t("learn.dashboardEmpty")}</CardDescription>
+            <Button asChild>
+              <Link href="/courses">{t("learn.browse")}</Link>
+            </Button>
+          </Card>
+        ) : (
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {courses.map((c) => (
+              <li key={c.id}>
+                <Link href={`/learn/${c.slug}`} className="block overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none">
+                  <CourseCover path={c.cover_image_path} />
+                  <div className="space-y-2 p-4">
+                    <p className="text-lg font-bold">{c.title}</p>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={c.percent} aria-valuemin={0} aria-valuemax={100} aria-label={t("learn.courseProgress")}>
+                      <div className="h-full rounded-full bg-success" style={{ width: `${c.percent}%` }} />
+                    </div>
+                    <p className="text-sm text-muted-foreground">{t("learn.lessonsDone", { done: c.done, total: c.total })}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
