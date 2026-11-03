@@ -54,6 +54,73 @@ export type Database = {
           },
         ]
       }
+      block_responses: {
+        Row: {
+          attempts: number
+          block_id: string
+          block_type: string
+          completed: boolean
+          created_at: string
+          id: string
+          lesson_id: string
+          lesson_version_id: string
+          response: Json
+          score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          block_id: string
+          block_type: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id: string
+          lesson_version_id: string
+          response?: Json
+          score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          block_id?: string
+          block_type?: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          lesson_version_id?: string
+          response?: Json
+          score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_responses_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "block_responses_lesson_version_id_fkey"
+            columns: ["lesson_version_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "block_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consents: {
         Row: {
           created_at: string
@@ -182,6 +249,163 @@ export type Database = {
           },
         ]
       }
+      enrollments: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          order_id: string | null
+          source: Database["public"]["Enums"]["enrollment_source"]
+          status: Database["public"]["Enums"]["enrollment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          source: Database["public"]["Enums"]["enrollment_source"]
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          source?: Database["public"]["Enums"]["enrollment_source"]
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_submissions: {
+        Row: {
+          block_id: string
+          course_id: string
+          created_at: string
+          feedback: string | null
+          id: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          lesson_id: string
+          lesson_version_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          share_in_gallery: boolean
+          status: Database["public"]["Enums"]["submission_status"]
+          storage_path: string | null
+          text_answer: string | null
+          tool_id: string | null
+          updated_at: string
+          url: string | null
+          url_check: Json | null
+          user_id: string
+        }
+        Insert: {
+          block_id: string
+          course_id: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          lesson_id: string
+          lesson_version_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          share_in_gallery?: boolean
+          status?: Database["public"]["Enums"]["submission_status"]
+          storage_path?: string | null
+          text_answer?: string | null
+          tool_id?: string | null
+          updated_at?: string
+          url?: string | null
+          url_check?: Json | null
+          user_id: string
+        }
+        Update: {
+          block_id?: string
+          course_id?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["submission_kind"]
+          lesson_id?: string
+          lesson_version_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          share_in_gallery?: boolean
+          status?: Database["public"]["Enums"]["submission_status"]
+          storage_path?: string | null
+          text_answer?: string | null
+          tool_id?: string | null
+          updated_at?: string
+          url?: string | null
+          url_check?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_submissions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_submissions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_submissions_lesson_version_id_fkey"
+            columns: ["lesson_version_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_submissions_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "external_tools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_tools: {
         Row: {
           base_url: string
@@ -226,6 +450,154 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      learning_events: {
+        Row: {
+          block_id: string | null
+          course_id: string | null
+          event_type: string
+          id: string
+          lesson_id: string | null
+          lesson_version_id: string | null
+          metadata: Json
+          occurred_at: string
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          block_id?: string | null
+          course_id?: string | null
+          event_type: string
+          id?: string
+          lesson_id?: string | null
+          lesson_version_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          block_id?: string | null
+          course_id?: string | null
+          event_type?: string
+          id?: string
+          lesson_id?: string | null
+          lesson_version_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_lesson_version_id_fkey"
+            columns: ["lesson_version_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_progress: {
+        Row: {
+          activity_attempted_at: string | null
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          current_phase: string
+          id: string
+          last_activity_at: string
+          lesson_id: string
+          lesson_version_id: string
+          quiz_score: number | null
+          started_at: string
+          status: Database["public"]["Enums"]["progress_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_attempted_at?: string | null
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          current_phase?: string
+          id?: string
+          last_activity_at?: string
+          lesson_id: string
+          lesson_version_id: string
+          quiz_score?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["progress_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_attempted_at?: string | null
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          current_phase?: string
+          id?: string
+          last_activity_at?: string
+          lesson_id?: string
+          lesson_version_id?: string
+          quiz_score?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["progress_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_version_id_fkey"
+            columns: ["lesson_version_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_versions: {
         Row: {
@@ -571,6 +943,10 @@ export type Database = {
         Returns: boolean
       }
       publish_lesson: { Args: { p_lesson_id: string }; Returns: string }
+      recompute_lesson_progress: {
+        Args: { p_lesson_id: string; p_user_id: string }
+        Returns: Database["public"]["Enums"]["progress_status"]
+      }
       reorder_lessons: {
         Args: { p_ids: string[]; p_module_id: string }
         Returns: undefined
@@ -578,6 +954,14 @@ export type Database = {
       reorder_modules: {
         Args: { p_course_id: string; p_ids: string[] }
         Returns: undefined
+      }
+      review_submission: {
+        Args: {
+          p_feedback: string
+          p_status: Database["public"]["Enums"]["submission_status"]
+          p_submission_id: string
+        }
+        Returns: Database["public"]["Enums"]["progress_status"]
       }
       save_lesson_draft: {
         Args: { p_blocks: Json; p_lesson_id: string }
@@ -601,7 +985,12 @@ export type Database = {
       consent_status: "pending" | "granted" | "withdrawn" | "expired"
       content_status: "draft" | "published" | "archived"
       course_type: "mini" | "big"
+      enrollment_source: "free" | "purchase" | "admin"
+      enrollment_status: "active" | "revoked"
       link_status: "pending" | "active" | "revoked"
+      progress_status: "in_progress" | "awaiting_review" | "completed"
+      submission_kind: "url" | "screenshot" | "file" | "text"
+      submission_status: "submitted" | "approved" | "needs_revision"
       version_status: "draft" | "published"
     }
     CompositeTypes: {
@@ -740,7 +1129,12 @@ export const Constants = {
       consent_status: ["pending", "granted", "withdrawn", "expired"],
       content_status: ["draft", "published", "archived"],
       course_type: ["mini", "big"],
+      enrollment_source: ["free", "purchase", "admin"],
+      enrollment_status: ["active", "revoked"],
       link_status: ["pending", "active", "revoked"],
+      progress_status: ["in_progress", "awaiting_review", "completed"],
+      submission_kind: ["url", "screenshot", "file", "text"],
+      submission_status: ["submitted", "approved", "needs_revision"],
       version_status: ["draft", "published"],
     },
   },
