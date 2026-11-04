@@ -60,7 +60,7 @@ export async function submitLead(_prev: LeadState, form: FormData): Promise<Lead
       "Your free AI lesson is ready",
       [
         `Hi${d.name ? ` ${d.name}` : ""}! Here's the free taster course: two short, hands-on lessons where your child tries an activity first and learns the idea behind it.`,
-        "Your child signs up with their own email and your email; you'll get a message to approve their account.",
+        "Your child signs up with their own email and your WhatsApp number; you'll get a WhatsApp message to approve the account.",
       ],
       { label: "Open the free course", url: `${site}/courses/${FREE_COURSE_SLUG}` },
     );

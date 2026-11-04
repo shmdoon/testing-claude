@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription } from "@/components/ui/card";
 import { CourseCover } from "@/components/course-card";
 import { getStudentDashboard } from "@/lib/learn/queries";
+import { ResendConsent } from "@/components/payments/ask-parent";
 import { t } from "@/i18n";
 
 export const metadata = { title: "Dashboard" };
@@ -18,7 +19,10 @@ export default async function LearnDashboard() {
       {user.profile.account_status === "pending_consent" && (
         <div role="status" className="flex gap-3 rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">
           <Hourglass className="mt-0.5 size-6 shrink-0" aria-hidden />
-          <p>{t("learn.pendingConsent")}</p>
+          <div className="space-y-2">
+            <p>{t("learn.pendingConsent")}</p>
+            <ResendConsent />
+          </div>
         </div>
       )}
 

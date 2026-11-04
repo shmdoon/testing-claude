@@ -10,7 +10,6 @@ import type { CheckoutStart } from "@/lib/payments/service";
 import { formatInr } from "@/lib/format";
 import { t } from "@/i18n";
 
-type Child = { id: string; name: string; enrolled: boolean };
 type Gateway = Extract<CheckoutStart, { kind: "gateway" }>;
 type RazorpayHandlerResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
 
@@ -31,10 +30,27 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { courseId: string; courseTitle: string; listPaise: number; students: Child[] }) {
+export function CheckoutForm({
+  courseId,
+  courseTitle,
+  listPaise,
+  payToken,
+  successHref,
+  defaults,
+}: {
+  courseId: string;
+  courseTitle: string;
+  listPaise: number;
+  /** Set when paying through a WhatsApp payment link (no login). */
+  payToken?: string;
+  successHref: string;
+  defaults: { payerName?: string; payerEmail?: string; payerPhone?: string };
+}) {
   const router = useRouter();
-  const eligible = students.filter((c) => !c.enrolled);
-  const [studentId, setStudentId] = useState(eligible[0]?.id ?? "");
+  const [payerName, setPayerName] = useState(defaults.payerName ?? "");
+  const [payerEmail, setPayerEmail] = useState(defaults.payerEmail ?? "");
+  const [payerPhone, setPayerPhone] = useState(defaults.payerPhone ?? "");
+  const [adult, setAdult] = useState(false);
   const [code, setCode] = useState("");
   const [price, setPrice] = useState({ list: listPaise, discount: 0, total: listPaise, applied: null as string | null });
   const [error, setError] = useState<string>();
@@ -45,17 +61,17 @@ export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { c
     const res = await fetch("/api/payments/verify", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ order_id: orderId, ...r }),
+      body: JSON.stringify({ order_id: orderId, ...(payToken ? { pay_token: payToken } : {}), ...r }),
     });
     const json = (await res.json()) as { status?: string; error?: string };
     if (!res.ok) return setError(json.error ?? t("pay.verifyFailed"));
-    router.push(`/parent/purchases?order=${orderId}${json.status === "pending" ? "&pending=1" : ""}`);
+    router.push(`${successHref}${successHref.includes("?") ? "&" : "?"}paid=1${json.status === "pending" ? "&pending=1" : ""}`);
   }
 
   function applyCoupon() {
     start(async () => {
       setError(undefined);
-      const q = await previewPrice(courseId, code);
+      const q = await previewPrice(courseId, code, payToken);
       if (!q.ok) return setError(q.error);
       setPrice({ list: q.listPaise, discount: q.discountPaise, total: q.totalPaise, applied: q.couponCode });
     });
@@ -64,9 +80,9 @@ export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { c
   function pay() {
     start(async () => {
       setError(undefined);
-      const r = await beginCheckout(courseId, studentId, price.applied ?? undefined);
+      const r = await beginCheckout(courseId, { couponCode: price.applied ?? undefined, payerName, payerEmail, payerPhone, adult }, payToken);
       if (!r.ok) return setError(r.error);
-      if (r.start.kind === "free") return router.push(`/parent/purchases?order=${r.start.orderId}`);
+      if (r.start.kind === "free") return router.push(`${successHref}${successHref.includes("?") ? "&" : "?"}paid=1`);
       const gw = r.start;
       if (gw.mode === "mock") return setMock(gw);
       if (!(await loadRazorpay()) || !window.Razorpay) return setError(t("pay.gatewayLoadFailed"));
@@ -77,7 +93,7 @@ export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { c
         order_id: gw.providerOrderId,
         name: "AI Learning Hub",
         description: gw.courseTitle,
-        prefill: { email: gw.email, name: gw.name },
+        prefill: { email: gw.email, name: gw.name, contact: gw.phone },
         theme: { color: "#4338ca" },
         handler: (resp: RazorpayHandlerResponse) => void verify(gw.orderId, resp),
       });
@@ -86,22 +102,29 @@ export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { c
     });
   }
 
-  if (eligible.length === 0) {
-    return <p className="rounded-xl border-2 border-dashed p-4">{students.length ? t("pay.allEnrolled") : t("pay.noChildren")}</p>;
-  }
-
   return (
     <div className="space-y-5">
-      <label className="block space-y-2">
-        <span className="font-medium">{t("pay.forChild")}</span>
-        <select value={studentId} onChange={(e) => setStudentId(e.currentTarget.value)} className="h-12 w-full rounded-lg border-2 border-input bg-background px-3">
-          {eligible.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <fieldset className="space-y-3">
+        <legend className="mb-1 font-semibold">{t("pay.payerSection")}</legend>
+        <label className="block space-y-2">
+          <span className="font-medium">{t("pay.payerName")}</span>
+          <Input value={payerName} onChange={(e) => setPayerName(e.currentTarget.value)} autoComplete="name" maxLength={120} />
+        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block space-y-2">
+            <span className="font-medium">{t("pay.payerPhone")}</span>
+            <Input value={payerPhone} onChange={(e) => setPayerPhone(e.currentTarget.value)} type="tel" inputMode="tel" autoComplete="tel" />
+          </label>
+          <label className="block space-y-2">
+            <span className="font-medium">{t("pay.payerEmail")}</span>
+            <Input value={payerEmail} onChange={(e) => setPayerEmail(e.currentTarget.value)} type="email" autoComplete="email" />
+          </label>
+        </div>
+        <label className="flex min-h-11 items-start gap-3">
+          <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.currentTarget.checked)} className="mt-1 size-5" />
+          <span>{t("pay.adultConfirm")}</span>
+        </label>
+      </fieldset>
 
       <div className="flex items-end gap-2">
         <label className="flex-1 space-y-2">
@@ -136,18 +159,18 @@ export function CheckoutForm({ courseId, courseTitle, listPaise, students }: { c
         </p>
       )}
 
-      <Button type="button" size="lg" className="w-full" disabled={pending || !studentId} onClick={pay}>
+      <Button type="button" size="lg" className="w-full" disabled={pending} onClick={pay}>
         <CreditCard aria-hidden /> {price.total === 0 ? t("pay.getFree") : t("pay.payNow", { price: formatInr(price.total) })}
       </Button>
       <p className="text-sm text-muted-foreground">{t("pay.secure")}</p>
 
-      {mock && <MockCheckout gw={mock} onClose={() => setMock(null)} onSuccess={(r) => verify(mock.orderId, r)} onFail={() => setError(t("pay.failed"))} />}
+      {mock && <MockCheckout gw={mock} payToken={payToken} onClose={() => setMock(null)} onSuccess={(r) => verify(mock.orderId, r)} onFail={() => setError(t("pay.failed"))} />}
     </div>
   );
 }
 
 /** Stand-in for Razorpay Checkout when running without keys (localhost/tests). */
-function MockCheckout({ gw, onClose, onSuccess, onFail }: { gw: Gateway; onClose: () => void; onSuccess: (r: RazorpayHandlerResponse) => void; onFail: () => void }) {
+function MockCheckout({ gw, payToken, onClose, onSuccess, onFail }: { gw: Gateway; payToken?: string; onClose: () => void; onSuccess: (r: RazorpayHandlerResponse) => void; onFail: () => void }) {
   const [pending, start] = useTransition();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -170,7 +193,7 @@ function MockCheckout({ gw, onClose, onSuccess, onFail }: { gw: Gateway; onClose
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const r = await payWithMock(gw.orderId, "success");
+                const r = await payWithMock(gw.orderId, "success", payToken);
                 if (r.ok) onSuccess(r);
                 onClose();
               })
@@ -184,7 +207,7 @@ function MockCheckout({ gw, onClose, onSuccess, onFail }: { gw: Gateway; onClose
             disabled={pending}
             onClick={() =>
               start(async () => {
-                await payWithMock(gw.orderId, "failure");
+                await payWithMock(gw.orderId, "failure", payToken);
                 onFail();
                 onClose();
               })

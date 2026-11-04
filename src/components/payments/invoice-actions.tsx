@@ -18,7 +18,7 @@ export function InvoiceActions({ invoiceId }: { invoiceId: string }) {
         Regenerate PDF
       </Button>
       <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(true)}>
-        Resend email
+        Resend to parent
       </Button>
       {msg && <span role="status" className="text-sm">{msg}</span>}
     </div>

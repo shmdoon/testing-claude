@@ -7,6 +7,8 @@ import { renderInvoicePdf, type InvoiceForPdf } from "@/lib/invoices/pdf";
 import { writeAudit } from "@/lib/audit";
 import { couponDiscount, formatPaise } from "./money";
 import { getProvider, mockGateway, mockPaymentId, type PaymentProvider } from "./provider";
+import { hashToken, newToken, signLink, siteUrl } from "@/lib/links";
+import { sendWhatsApp } from "@/lib/whatsapp/send";
 
 type Admin = ReturnType<typeof createAdminClient>;
 export class PaymentError extends Error {}
@@ -49,48 +51,38 @@ export async function quote(admin: Admin, courseId: string, buyerId: string, cou
 // Order creation
 // ---------------------------------------------------------------------------
 export type CheckoutStart =
-  | { kind: "gateway"; mode: "razorpay" | "mock"; keyId: string; orderId: string; providerOrderId: string; amount: number; courseTitle: string; email: string; name: string }
+  | { kind: "gateway"; mode: "razorpay" | "mock"; keyId: string; orderId: string; providerOrderId: string; amount: number; courseTitle: string; email: string; phone: string; name: string }
   | { kind: "free"; orderId: string };
 
-export async function startCheckout(input: { buyerId: string; studentId: string; courseId: string; couponCode?: string | null }): Promise<CheckoutStart> {
+export type Payer = { name: string; email?: string; phone?: string };
+
+/**
+ * One account per child: the child's account is the buyer; the person paying
+ * (parent/guardian, 18+) is recorded for the invoice. `paymentRequestId` is set
+ * when paying through a WhatsApp payment link (no login).
+ */
+export async function startCheckout(input: { studentId: string; courseId: string; couponCode?: string | null; payer: Payer; paymentRequestId?: string }): Promise<CheckoutStart> {
   const admin = createAdminClient();
   const provider = getProvider();
   if (!provider) throw new PaymentError("Payments aren't set up yet.");
 
-  // Buyer must be a parent linked to an active student (or an admin).
-  const { data: buyer } = await admin.from("profiles").select("id, role, email, full_name").eq("id", input.buyerId).single();
-  if (!buyer || !["parent", "admin"].includes(buyer.role)) throw new PaymentError("Only a parent or guardian can buy courses.");
-  if (buyer.role === "parent") {
-    const { data: link } = await admin
-      .from("parent_student_links")
-      .select("id")
-      .eq("parent_id", buyer.id)
-      .eq("student_id", input.studentId)
-      .eq("status", "active")
-      .maybeSingle();
-    if (!link) throw new PaymentError("You can only buy for your own linked child.");
-  }
-  const { data: student } = await admin.from("profiles").select("id, role, account_status").eq("id", input.studentId).single();
-  if (!student || student.role !== "student") throw new PaymentError("Choose a student.");
-  if (student.account_status !== "active") throw new PaymentError("This student's account needs parental consent first.");
+  const { data: student } = await admin.from("profiles").select("id, role, account_status, parent_phone, parent_email").eq("id", input.studentId).single();
+  if (!student || student.role !== "student") throw new PaymentError("Courses are bought for a student account.");
+  if (student.account_status !== "active") throw new PaymentError("A parent needs to approve this account first (check WhatsApp).");
 
-  const { data: enrolled } = await admin
-    .from("enrollments")
-    .select("id")
-    .eq("user_id", student.id)
-    .eq("course_id", input.courseId)
-    .eq("status", "active")
-    .maybeSingle();
+  const { data: enrolled } = await admin.from("enrollments").select("id").eq("user_id", student.id).eq("course_id", input.courseId).eq("status", "active").maybeSingle();
   if (enrolled) throw new PaymentError("Already enrolled in this course.");
 
-  const q = await quote(admin, input.courseId, buyer.id, input.couponCode);
+  const q = await quote(admin, input.courseId, student.id, input.couponCode);
   const { data: course } = await admin.from("courses").select("title").eq("id", input.courseId).single();
+  const payerEmail = input.payer.email || student.parent_email || undefined;
+  const payerPhone = input.payer.phone || student.parent_phone || undefined;
 
   const free = q.totalPaise === 0;
   const { data: order, error } = await admin
     .from("orders")
     .insert({
-      buyer_id: buyer.id,
+      buyer_id: student.id,
       student_id: student.id,
       course_id: input.courseId,
       list_price_paise: q.listPaise,
@@ -98,16 +90,19 @@ export async function startCheckout(input: { buyerId: string; studentId: string;
       total_paise: q.totalPaise,
       coupon_id: q.couponId,
       provider: free ? "free" : provider.mode,
+      payer_name: input.payer.name,
+      payer_email: payerEmail ?? null,
+      payer_phone: payerPhone ?? null,
+      payment_request_id: input.paymentRequestId ?? null,
     })
     .select("id")
     .single();
   if (error || !order) throw new PaymentError("Couldn't start checkout. Please try again.");
 
   if (free) {
-    // 100% coupon: nothing to charge.
     const { data: invoiceId, error: fe } = await admin.rpc("fulfill_order", { p_order_id: order.id, p_provider_payment_id: null as unknown as string, p_amount_paise: 0, p_method: "coupon" });
     if (fe) throw new PaymentError("Couldn't complete the order.");
-    if (invoiceId) await deliverInvoice(invoiceId as string, { email: true });
+    if (invoiceId) await deliverInvoice(invoiceId as string, { notify: true });
     return { kind: "free", orderId: order.id };
   }
 
@@ -121,9 +116,57 @@ export async function startCheckout(input: { buyerId: string; studentId: string;
     providerOrderId: gwOrder.id,
     amount: q.totalPaise,
     courseTitle: course?.title ?? "Course",
-    email: buyer.email,
-    name: buyer.full_name ?? "",
+    email: payerEmail ?? "",
+    phone: payerPhone ?? "",
+    name: input.payer.name,
   };
+}
+
+/** Who may act on an order: the signed-in child account, or the holder of the WhatsApp payment link. */
+export type OrderAuth = { userId: string } | { paymentRequestId: string };
+
+function ownsOrder(order: { buyer_id: string; payment_request_id: string | null }, auth: OrderAuth) {
+  return "userId" in auth ? order.buyer_id === auth.userId : order.payment_request_id === auth.paymentRequestId;
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp payment links ("ask my parent to pay")
+// ---------------------------------------------------------------------------
+const PAY_LINK_DAYS = 7;
+
+export async function createPaymentLink(studentId: string, courseId: string): Promise<{ status: "sent" | "manual" | "failed" }> {
+  const admin = createAdminClient();
+  const { data: student } = await admin.from("profiles").select("full_name, parent_phone, account_status").eq("id", studentId).single();
+  if (!student?.parent_phone) throw new PaymentError("We don't have a WhatsApp number for your parent.");
+  if (student.account_status !== "active") throw new PaymentError("Your parent needs to approve your account first.");
+  const q = await quote(admin, courseId, studentId, null);
+  const { data: course } = await admin.from("courses").select("title").eq("id", courseId).single();
+  const token = newToken();
+  const { data: req, error } = await admin
+    .from("payment_requests")
+    .insert({ student_id: studentId, course_id: courseId, token_hash: await hashToken(token), expires_at: new Date(Date.now() + PAY_LINK_DAYS * 864e5).toISOString() })
+    .select("id")
+    .single();
+  if (error || !req) throw new PaymentError("Couldn't create the payment link.");
+  const r = await sendWhatsApp({
+    to: student.parent_phone,
+    template: "payment_link",
+    params: [(student.full_name ?? "Your child").split(" ")[0]!, course?.title ?? "a course", `INR ${formatPaise(q.totalPaise)}`, siteUrl(`/pay/${token}`)],
+    studentId,
+    related: { type: "payment_request", id: req.id },
+  });
+  return { status: r.status };
+}
+
+export async function getPaymentRequest(token: string) {
+  if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return null;
+  const { data } = await createAdminClient()
+    .from("payment_requests")
+    .select("id, status, expires_at, student_id, course_id, profiles!payment_requests_student_id_fkey(full_name, parent_name, parent_email, parent_phone), courses(title, slug, price_paise, is_free)")
+    .eq("token_hash", await hashToken(token))
+    .maybeSingle();
+  if (!data) return null;
+  return { ...data, expired: new Date(data.expires_at) < new Date() };
 }
 
 // ---------------------------------------------------------------------------
@@ -131,17 +174,18 @@ export async function startCheckout(input: { buyerId: string; studentId: string;
 // ---------------------------------------------------------------------------
 export const verifySchema = z.object({
   order_id: z.uuid(),
+  pay_token: z.string().regex(/^[A-Za-z0-9_-]{40,60}$/).optional(),
   razorpay_order_id: z.string().min(1).max(64),
   razorpay_payment_id: z.string().min(1).max(512),
   razorpay_signature: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
-export async function verifyAndFulfil(buyerId: string, input: z.infer<typeof verifySchema>): Promise<{ status: "paid" | "pending" }> {
+export async function verifyAndFulfil(auth: OrderAuth, input: z.infer<typeof verifySchema>): Promise<{ status: "paid" | "pending" }> {
   const admin = createAdminClient();
   const provider = getProvider();
   if (!provider) throw new PaymentError("Payments aren't set up.");
   const { data: order } = await admin.from("orders").select("*").eq("id", input.order_id).maybeSingle();
-  if (!order || order.buyer_id !== buyerId || order.provider_order_id !== input.razorpay_order_id) throw new PaymentError("Order not found.");
+  if (!order || !ownsOrder(order, auth) || order.provider_order_id !== input.razorpay_order_id) throw new PaymentError("Order not found.");
   if (order.status === "paid") return { status: "paid" };
   if (!(await provider.verifyCheckout(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature))) {
     throw new PaymentError("Payment could not be verified.");
@@ -164,7 +208,7 @@ async function fulfil(admin: Admin, orderId: string, paymentId: string, amount: 
   if (error) throw new PaymentError(`Fulfilment failed: ${error.message}`);
   if (invoiceId) {
     const { data: inv } = await admin.from("invoices").select("emailed_at").eq("id", invoiceId as string).single();
-    if (!inv?.emailed_at) await deliverInvoice(invoiceId as string, { email: true });
+    if (!inv?.emailed_at) await deliverInvoice(invoiceId as string, { notify: true });
   }
 }
 
@@ -290,16 +334,17 @@ async function completeRefund(admin: Admin, refundId: string, providerRefundId: 
   if (error) throw error;
   if (cnId) {
     const { data: cn } = await admin.from("invoices").select("emailed_at").eq("id", cnId as string).single();
-    if (!cn?.emailed_at) await deliverInvoice(cnId as string, { email: true });
+    if (!cn?.emailed_at) await deliverInvoice(cnId as string, { notify: true });
   }
 }
 
 // ---------------------------------------------------------------------------
 // Invoice documents: PDF → private bucket → email
 // ---------------------------------------------------------------------------
-export async function deliverInvoice(invoiceId: string, opts: { email: boolean }): Promise<{ path: string; emailed: boolean }> {
+/** PDF → private bucket → WhatsApp (signed download link) + email if we have one. */
+export async function deliverInvoice(invoiceId: string, opts: { notify: boolean }): Promise<{ path: string; emailed: boolean; whatsapp: string | null }> {
   const admin = createAdminClient();
-  const { data: inv } = await admin.from("invoices").select("*, original:original_invoice_id(number), orders(course_id, courses(title))").eq("id", invoiceId).single();
+  const { data: inv } = await admin.from("invoices").select("*, original:original_invoice_id(number), orders(student_id, course_id, courses(title))").eq("id", invoiceId).single();
   if (!inv) throw new PaymentError("Invoice not found.");
   const pdf = await renderInvoicePdf({
     ...(inv as unknown as InvoiceForPdf),
@@ -311,36 +356,49 @@ export async function deliverInvoice(invoiceId: string, opts: { email: boolean }
   await admin.from("invoices").update({ pdf_path: path }).eq("id", inv.id);
 
   let emailed = false;
-  if (opts.email) {
+  let whatsapp: string | null = null;
+  if (opts.notify) {
     const credit = inv.kind === "credit_note";
-    const course = (inv as { orders?: { courses?: { title: string } | null } | null }).orders?.courses?.title ?? "your course";
-    const site = getServerEnv().NEXT_PUBLIC_SITE_URL;
-    const { html, text } = emailLayout(
-      credit ? "Your refund is complete" : "Payment received — thank you!",
-      credit
-        ? [`We've refunded INR ${formatPaise(inv.total_paise)} for ${course}.`, `Credit note ${inv.number} is attached. Refunds usually reach your account in 5–7 working days.`]
-        : [`We've received INR ${formatPaise(inv.total_paise)} for ${course}${inv.student_name ? ` for ${inv.student_name}` : ""}.`, `Invoice ${inv.number} is attached. The course is unlocked now.`],
-      { label: "View purchases", url: `${site}/parent/purchases` },
-    );
-    const r = await sendEmail({
-      to: inv.buyer_email,
-      subject: credit ? `Refund processed — ${inv.number}` : `Your invoice ${inv.number}`,
-      html,
-      text,
-      template: credit ? "credit_note" : "invoice",
-      related: { type: "invoice", id: inv.id },
-      attachments: [{ filename: `${inv.number.replaceAll("/", "-")}.pdf`, content: pdf }],
-    });
-    emailed = r.status !== "failed";
-    if (emailed) await admin.from("invoices").update({ emailed_at: new Date().toISOString() }).eq("id", inv.id);
+    const order = (inv as { orders?: { student_id: string; courses?: { title: string } | null } | null }).orders;
+    const course = order?.courses?.title ?? "the course";
+    const child = (inv.student_name ?? "your child").split(" ")[0]!;
+    const link = siteUrl(`/api/invoices/link/${await signLink("invoice", inv.id, 60 * 60 * 24 * 30)}`);
+
+    if (inv.buyer_phone) {
+      const r = await sendWhatsApp(
+        credit
+          ? { to: inv.buyer_phone, template: "refund_processed", params: [child, course, `INR ${formatPaise(inv.total_paise)}`, link], studentId: order?.student_id, related: { type: "invoice", id: inv.id } }
+          : { to: inv.buyer_phone, template: "invoice_ready", params: [child, course, `INR ${formatPaise(inv.total_paise)}`, inv.number, link], studentId: order?.student_id, related: { type: "invoice", id: inv.id } },
+      );
+      whatsapp = r.status;
+    }
+    if (inv.buyer_email) {
+      const { html, text } = emailLayout(
+        credit ? "Your refund is complete" : "Payment received — thank you!",
+        credit
+          ? [`We've refunded INR ${formatPaise(inv.total_paise)} for ${course}.`, `Credit note ${inv.number} is attached. Refunds usually reach your account in 5–7 working days.`]
+          : [`We've received INR ${formatPaise(inv.total_paise)} for ${course} for ${child}.`, `Invoice ${inv.number} is attached. The course is unlocked now.`],
+      );
+      const r = await sendEmail({
+        to: inv.buyer_email,
+        subject: credit ? `Refund processed — ${inv.number}` : `Your invoice ${inv.number}`,
+        html,
+        text,
+        template: credit ? "credit_note" : "invoice",
+        related: { type: "invoice", id: inv.id },
+        attachments: [{ filename: `${inv.number.replaceAll("/", "-")}.pdf`, content: pdf }],
+      });
+      emailed = r.status !== "failed";
+    }
+    if (emailed || whatsapp) await admin.from("invoices").update({ emailed_at: new Date().toISOString() }).eq("id", inv.id);
   }
-  return { path, emailed };
+  return { path, emailed, whatsapp };
 }
 
 export async function invoiceSignedUrl(invoiceId: string): Promise<string> {
   const admin = createAdminClient();
   const { data: inv } = await admin.from("invoices").select("pdf_path").eq("id", invoiceId).single();
-  const path = inv?.pdf_path ?? (await deliverInvoice(invoiceId, { email: false })).path;
+  const path = inv?.pdf_path ?? (await deliverInvoice(invoiceId, { notify: false })).path;
   const { data, error } = await admin.storage.from(INVOICES_BUCKET()).createSignedUrl(path, 60, { download: true });
   if (error || !data) throw new PaymentError("Couldn't create a download link.");
   return data.signedUrl;
@@ -355,12 +413,12 @@ export async function simulateWebhook(event: string, payload: RzpEvent["payload"
 }
 
 /** What Razorpay Checkout + its webhook would do for a mock order. */
-export async function mockPay(buyerId: string, orderId: string, outcome: "success" | "failure") {
+export async function mockPay(auth: OrderAuth, orderId: string, outcome: "success" | "failure") {
   const provider = getProvider() as PaymentProvider | null;
   if (provider?.mode !== "mock") throw new PaymentError("Mock payments are disabled.");
   const admin = createAdminClient();
   const { data: order } = await admin.from("orders").select("*").eq("id", orderId).maybeSingle();
-  if (!order || order.buyer_id !== buyerId || !order.provider_order_id) throw new PaymentError("Order not found.");
+  if (!order || !ownsOrder(order, auth) || !order.provider_order_id) throw new PaymentError("Order not found.");
   const status = outcome === "success" ? "captured" : "failed";
   const paymentId = mockPaymentId(order.provider_order_id, order.total_paise, status);
   const entity = {

@@ -32,10 +32,10 @@ export async function regenerateInvoice(invoiceId: string, email: boolean): Prom
   const user = await requireArea("admin");
   if (!uuid.safeParse(invoiceId).success) return { error: "Invalid invoice." };
   try {
-    const r = await deliverInvoice(invoiceId, { email });
+    const r = await deliverInvoice(invoiceId, { notify: email });
     await writeAudit({ actorId: user.id, action: email ? "invoice.resent" : "invoice.regenerated", targetType: "invoice", targetId: invoiceId });
     revalidatePath("/admin/invoices");
-    return { ok: true, message: email ? (r.emailed ? "PDF regenerated and emailed." : "PDF regenerated; email failed.") : "PDF regenerated." };
+    return { ok: true, message: email ? `PDF regenerated and sent (WhatsApp: ${r.whatsapp ?? "no number"}, email: ${r.emailed ? "sent" : "none"}).` : "PDF regenerated." };
   } catch (e) {
     return { error: e instanceof PaymentError ? e.message : "Couldn't regenerate the invoice." };
   }

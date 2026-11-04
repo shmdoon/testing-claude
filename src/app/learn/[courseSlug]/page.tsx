@@ -3,6 +3,9 @@ import { CheckCircle2, Circle, CircleDot, Hourglass, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EnrollButton } from "@/components/player/enroll-button";
 import { TrackCourse } from "@/components/player/track-course";
+import { AskParentToPay, ResendConsent } from "@/components/payments/ask-parent";
+import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 import { getLearnCourse, type LessonStatus } from "@/lib/learn/queries";
 import { formatInr } from "@/lib/format";
 import { t } from "@/i18n";
@@ -16,7 +19,17 @@ const ICON: Record<LessonStatus, React.ReactNode> = {
   not_started: <Circle className="size-6 text-muted-foreground" aria-hidden />,
 };
 
-export default async function LearnCoursePage({ params }: PageProps<"/learn/[courseSlug]">) {
+async function PaidBanner({ searchParams }: { searchParams: PageProps<"/learn/[courseSlug]">["searchParams"] }) {
+  const sp = await searchParams;
+  if (!sp.paid) return null;
+  return (
+    <p role="status" className="rounded-2xl border-2 border-success/50 bg-success/10 p-4 font-semibold">
+      {sp.pending ? t("pay.pendingBanner") : t("pay.paidBanner")}
+    </p>
+  );
+}
+
+export default async function LearnCoursePage({ params, searchParams }: PageProps<"/learn/[courseSlug]">) {
   const { courseSlug } = await params;
   const { user, course, enrolled, modules, completed, total } = await getLearnCourse(courseSlug);
   const pct = total ? Math.round((completed / total) * 100) : 0;
@@ -25,6 +38,9 @@ export default async function LearnCoursePage({ params }: PageProps<"/learn/[cou
   return (
     <div className="space-y-6">
       {enrolled && <TrackCourse courseId={course.id} />}
+      <Suspense>
+        <PaidBanner searchParams={searchParams} />
+      </Suspense>
       <Link href="/learn" className="inline-flex min-h-11 items-center font-medium text-muted-foreground hover:text-foreground">
         ← {t("nav.dashboard")}
       </Link>
@@ -49,17 +65,26 @@ export default async function LearnCoursePage({ params }: PageProps<"/learn/[cou
       </header>
 
       {pending ? (
-        <p role="status" className="rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">
-          {t("learn.pendingConsent")}
-        </p>
+        <div role="status" className="space-y-2 rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">
+          <p>{t("learn.pendingConsent")}</p>
+          <ResendConsent />
+        </div>
       ) : (
         !enrolled &&
         (course.is_free ? (
           <EnrollButton courseId={course.id} />
         ) : (
-          <p className="rounded-2xl border-2 border-dashed p-4">
-            {formatInr(course.price_paise)} · {t("pay.buyAsk")}
-          </p>
+          <div className="space-y-3 rounded-2xl border-2 border-dashed p-4">
+            <p>
+              <strong>{formatInr(course.price_paise)}</strong> · {t("pay.buyAsk")}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href={`/learn/checkout/${course.slug}`}>{t("pay.payHere")}</Link>
+              </Button>
+              <AskParentToPay courseId={course.id} />
+            </div>
+          </div>
         ))
       )}
 
