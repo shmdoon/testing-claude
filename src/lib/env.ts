@@ -30,6 +30,15 @@ export const serverSchema = publicSchema.extend({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("AI Learning Hub <onboarding@resend.dev>"),
   SUPABASE_INVOICES_BUCKET: z.string().default("invoices"),
+  // WhatsApp Business Platform (Cloud API). Empty → messages go to the admin outbox for manual sending.
+  WHATSAPP_TOKEN: z.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  WHATSAPP_API_VERSION: z.string().default("v21.0"),
+  WHATSAPP_TEMPLATE_LANGUAGE: z.string().default("en"),
+  // Signs links sent to parents (invoice downloads). 32+ random bytes.
+  LINK_SECRET: z.string().optional(),
+  // Bearer secret for scheduled jobs (weekly WhatsApp summary).
+  CRON_SECRET: z.string().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicSchema>;
