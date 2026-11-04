@@ -1351,6 +1351,7 @@ export type Database = {
       parent_student_links: {
         Row: {
           created_at: string
+          gallery_consent: boolean
           id: string
           parent_id: string
           status: Database["public"]["Enums"]["link_status"]
@@ -1359,6 +1360,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          gallery_consent?: boolean
           id?: string
           parent_id: string
           status?: Database["public"]["Enums"]["link_status"]
@@ -1367,6 +1369,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          gallery_consent?: boolean
           id?: string
           parent_id?: string
           status?: Database["public"]["Enums"]["link_status"]
@@ -1714,12 +1717,42 @@ export type Database = {
       }
     }
     Functions: {
+      admin_engagement: {
+        Args: { p_from: string; p_group: string; p_to: string }
+        Returns: {
+          active_seconds: number
+          detail: string
+          external_seconds: number
+          key_id: string
+          label: string
+          lessons_completed: number
+          students: number
+        }[]
+      }
+      admin_overview: { Args: never; Returns: Json }
       admin_set_role: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"]
           p_user_id: string
         }
         Returns: undefined
+      }
+      admin_students: {
+        Args: { p_search?: string }
+        Returns: {
+          account_status: Database["public"]["Enums"]["account_status"]
+          class_level: number
+          completion_pct: number
+          courses: number
+          email: string
+          external_seconds: number
+          full_name: string
+          id: string
+          last_active: string
+          lessons_done: number
+          lessons_total: number
+          total_seconds: number
+        }[]
       }
       complete_parent_profile: {
         Args: { p_full_name: string }
@@ -1745,6 +1778,20 @@ export type Database = {
           p_provider_payment_id: string
         }
         Returns: string
+      }
+      gallery_items: {
+        Args: { p_limit?: number }
+        Returns: {
+          approved_at: string
+          class_level: number
+          course_title: string
+          first_name: string
+          has_image: boolean
+          id: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          lesson_title: string
+          url: string
+        }[]
       }
       get_time_summary: {
         Args: { p_from: string; p_to: string; p_user_id: string }
