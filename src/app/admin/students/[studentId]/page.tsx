@@ -8,6 +8,8 @@ import { formatDuration } from "@/components/charts/scale";
 import { requireArea } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getStudentStats } from "@/lib/learn/stats";
+import { waLink } from "@/lib/phone";
+import { AdminConsent, AdminGallery } from "@/components/dashboard/parent-contact";
 
 export const metadata = { title: "Student" };
 
@@ -15,7 +17,12 @@ export default async function StudentDetail({ params }: PageProps<"/admin/studen
   const { studentId } = await params;
   await requireArea("admin");
   const supabase = await createClient();
-  const { data: p } = await supabase.from("profiles").select("full_name, email, class_level, account_status, created_at, acquisition").eq("id", studentId).eq("role", "student").maybeSingle();
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("full_name, email, class_level, account_status, created_at, acquisition, parent_name, parent_phone, parent_email, parent_whatsapp_opt_in, gallery_consent")
+    .eq("id", studentId)
+    .eq("role", "student")
+    .maybeSingle();
   if (!p) notFound();
 
   const [stats, { data: progress }, { data: minutes }, { data: responses }, { data: events }] = await Promise.all([
@@ -40,6 +47,34 @@ export default async function StudentDetail({ params }: PageProps<"/admin/studen
         <Badge variant={p.account_status === "active" ? "success" : "warning"}>{p.account_status.replace("_", " ")}</Badge>
         {p.acquisition && <Badge variant="outline">via {Object.values(p.acquisition as Record<string, string>).join(" / ")}</Badge>}
       </div>
+      <Card className="gap-3">
+        <CardTitle>Parent / guardian</CardTitle>
+        <dl className="grid gap-2 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-muted-foreground">Name</dt>
+            <dd className="font-medium">{p.parent_name ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">WhatsApp</dt>
+            <dd className="font-medium">
+              {p.parent_phone ? (
+                <a href={waLink(p.parent_phone, `Hi${p.parent_name ? ` ${p.parent_name}` : ""}, this is AI Learning Hub about ${(p.full_name ?? "your child").split(" ")[0]}. `)} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                  {p.parent_phone}
+                </a>
+              ) : (
+                "—"
+              )}{" "}
+              {p.parent_whatsapp_opt_in ? <Badge variant="success">updates on</Badge> : <Badge variant="outline">no updates</Badge>}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Email</dt>
+            <dd className="font-medium">{p.parent_email ?? "—"}</dd>
+          </div>
+        </dl>
+        {p.account_status === "pending_consent" && <AdminConsent studentId={studentId} />}
+        <AdminGallery studentId={studentId} initial={p.gallery_consent} />
+      </Card>
       <div className="grid gap-3 sm:grid-cols-4">
         <StatTile label="This week" value={formatDuration(stats.weekActiveSeconds)} sub={stats.weekExternalSeconds ? `+${formatDuration(stats.weekExternalSeconds)} est. elsewhere` : undefined} />
         <StatTile label="Total active time" value={formatDuration(stats.totalSeconds)} />

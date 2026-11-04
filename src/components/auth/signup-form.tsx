@@ -9,65 +9,31 @@ import { CodeForm } from "./code-form";
 import { FieldError, FormError, SubmitButton } from "./form-bits";
 import { t } from "@/i18n";
 
-type Role = "student" | "parent";
-
+/** One account per child — created by the child or a parent. */
 export function SignupForm() {
   const [state, action] = useActionState<AuthFormState, FormData>(requestSignupCode, { step: "email" });
-  const [role, setRole] = useState<Role>("student");
   const [dismissed, setDismissed] = useState<AuthFormState | null>(null);
 
   if (state.step === "code" && state.email && state !== dismissed) {
     return <CodeForm email={state.email} onReset={() => setDismissed(state)} />;
   }
   const fe = state.fieldErrors ?? {};
-
   return (
     <form action={action} className="space-y-5" noValidate>
-      <RolePicker role={role} onChange={setRole} />
-      {role === "student" ? <StudentFields fieldErrors={fe} values={state.values} /> : <NameField fieldErrors={fe} values={state.values} />}
-      <Field name="email" type="email" label={t("common.email")} autoComplete="email" error={fe.email} defaultValue={state.values?.email} />
+      <StudentFields fieldErrors={fe} values={state.values} />
+      <Field name="email" type="email" label={t("auth.studentEmail")} help={t("auth.studentEmailHelp")} autoComplete="email" error={fe.email} defaultValue={state.values?.email} />
       <FormError code={state.error} />
       <SubmitButton>{t("auth.createAccount")}</SubmitButton>
     </form>
   );
 }
 
-export function RolePicker({ role, onChange }: { role: Role; onChange: (r: Role) => void }) {
-  return (
-    <fieldset className="space-y-2">
-      <legend className="mb-2 font-medium">{t("auth.iAmA")}</legend>
-      <div className="grid grid-cols-2 gap-3">
-        {(["student", "parent"] as const).map((r) => (
-          <label
-            key={r}
-            className="flex min-h-12 cursor-pointer items-center justify-center rounded-lg border-2 px-3 text-center font-semibold has-checked:border-primary has-checked:bg-secondary has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50"
-          >
-            <input
-              type="radio"
-              name="role"
-              value={r}
-              checked={role === r}
-              onChange={() => onChange(r)}
-              className="sr-only"
-            />
-            {r === "student" ? t("auth.roleStudent") : t("auth.roleParent")}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
 type Echo = { fieldErrors: Record<string, string>; values?: Record<string, string> };
-
-export function NameField({ fieldErrors, values }: Echo) {
-  return <Field name="full_name" label={t("auth.fullName")} autoComplete="name" error={fieldErrors.full_name} defaultValue={values?.full_name} />;
-}
 
 export function StudentFields({ fieldErrors, values }: Echo) {
   return (
     <>
-      <NameField fieldErrors={fieldErrors} values={values} />
+      <Field name="full_name" label={t("auth.childName")} autoComplete="off" error={fieldErrors.full_name} defaultValue={values?.full_name} />
       <div className="space-y-2">
         <Label htmlFor="class_level">{t("auth.classLevel")}</Label>
         <select
@@ -88,15 +54,31 @@ export function StudentFields({ fieldErrors, values }: Echo) {
             </option>
           ))}
         </select>
+        <FieldError id="class_level-error" code={fieldErrors.class_level} />
       </div>
-      <Field
-        name="parent_email"
-        type="email"
-        label={t("auth.parentEmail")}
-        help={t("auth.parentEmailHelp")}
-        error={fieldErrors.parent_email}
-        defaultValue={values?.parent_email}
-      />
+      <fieldset className="space-y-4 rounded-2xl border-2 p-4">
+        <legend className="px-1 font-semibold">{t("auth.parentSection")}</legend>
+        <Field
+          name="parent_phone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="off"
+          label={t("auth.parentPhone")}
+          help={t("auth.parentPhoneHelp")}
+          placeholder="98765 43210"
+          error={fieldErrors.parent_phone}
+          defaultValue={values?.parent_phone}
+        />
+        <Field name="parent_name" label={t("auth.parentName")} autoComplete="off" required={false} error={fieldErrors.parent_name} defaultValue={values?.parent_name} />
+        <Field name="parent_email" type="email" label={t("auth.parentEmailOptional")} required={false} autoComplete="off" error={fieldErrors.parent_email} defaultValue={values?.parent_email} />
+        <label className="flex min-h-11 items-start gap-3">
+          <input type="checkbox" name="whatsapp_opt_in" defaultChecked={values ? values.whatsapp_opt_in === "on" : false} className="mt-1 size-5" aria-invalid={Boolean(fieldErrors.whatsapp_opt_in)} />
+          <span>
+            {t("auth.whatsappOptIn")}
+            <FieldError id="whatsapp_opt_in-error" code={fieldErrors.whatsapp_opt_in} />
+          </span>
+        </label>
+      </fieldset>
     </>
   );
 }
@@ -106,13 +88,14 @@ function Field({
   label,
   help,
   error,
+  required = true,
   ...rest
-}: { name: string; label: string; help?: string; error?: string } & React.ComponentProps<"input">) {
+}: { name: string; label: string; help?: string; error?: string; required?: boolean } & React.ComponentProps<"input">) {
   const describedBy = [help && `${name}-help`, error && `${name}-error`].filter(Boolean).join(" ") || undefined;
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} required aria-invalid={Boolean(error)} aria-describedby={describedBy} {...rest} />
+      <Input id={name} name={name} required={required} aria-invalid={Boolean(error)} aria-describedby={describedBy} {...rest} />
       {help && (
         <p id={`${name}-help`} className="text-sm text-muted-foreground">
           {help}

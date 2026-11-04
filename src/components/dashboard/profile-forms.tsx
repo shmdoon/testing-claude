@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { setGalleryConsent, setMyGalleryShare, updateMyName, type SimpleState } from "@/lib/learn/profile-actions";
+import { setMyGalleryShare, updateMyName, type SimpleState } from "@/lib/learn/profile-actions";
 import { FormMessage, Submit, TextField } from "@/components/studio/fields";
 import { fieldDefault } from "@/lib/forms";
 
@@ -18,7 +18,7 @@ export function NameForm({ name }: { name: string }) {
   );
 }
 
-function Toggle({ label, initial, onChange }: { label: string; initial: boolean; onChange: (v: boolean) => Promise<SimpleState> }) {
+export function Toggle({ label, initial, onChange }: { label: string; initial: boolean; onChange: (v: boolean) => Promise<SimpleState> }) {
   const [on, setOn] = useState(initial);
   const [error, setError] = useState<string>();
   const [pending, start] = useTransition();
@@ -50,8 +50,4 @@ function Toggle({ label, initial, onChange }: { label: string; initial: boolean;
 
 export function GalleryShareToggle({ submissionId, initial }: { submissionId: string; initial: boolean }) {
   return <Toggle label="Show in the class gallery (first name only)" initial={initial} onChange={(v) => setMyGalleryShare(submissionId, v)} />;
-}
-
-export function GalleryConsentToggle({ studentId, initial, name }: { studentId: string; initial: boolean; name: string }) {
-  return <Toggle label={`Allow ${name}'s approved projects in the members-only gallery (first name only)`} initial={initial} onChange={(v) => setGalleryConsent(studentId, v)} />;
 }

@@ -4,11 +4,11 @@ import { APP_ROLES, areaForPath, canAccessArea, homeForRole, safeNextPath, type 
 describe("role → area access matrix", () => {
   const expected: Record<AppRole, Area[]> = {
     student: ["learn"],
-    parent: ["parent"],
+    parent: [],
     content_editor: ["studio"],
-    admin: ["learn", "parent", "studio", "admin"],
+    admin: ["learn", "studio", "admin"],
   };
-  const areas: Area[] = ["learn", "parent", "studio", "admin"];
+  const areas: Area[] = ["learn", "studio", "admin"];
 
   for (const role of APP_ROLES) {
     for (const area of areas) {
@@ -17,11 +17,11 @@ describe("role → area access matrix", () => {
         expect(canAccessArea(role, area)).toBe(allowed);
       });
     }
-    it(`${role}'s home is an area they can enter`, () => {
+    it(`${role}'s home is reachable`, () => {
       const home = homeForRole(role);
       const area = areaForPath(home);
-      expect(area).not.toBeNull();
-      expect(canAccessArea(role, area!)).toBe(true);
+      if (role === "parent") expect(area).toBeNull(); // legacy role → public site
+      else expect(canAccessArea(role, area!)).toBe(true);
     });
   }
 });
@@ -32,7 +32,7 @@ describe("areaForPath", () => {
     ["/learn/ai-basics/lesson-1", "learn"],
     ["/admin/payments", "admin"],
     ["/studio", "studio"],
-    ["/parent", "parent"],
+    ["/parent", null],
     ["/", null],
     ["/courses", null],
     ["/learning-tips", null],

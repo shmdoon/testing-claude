@@ -6,9 +6,9 @@ export type AccountStatus = Enums<"account_status">;
 export const APP_ROLES: readonly AppRole[] = ["student", "parent", "content_editor", "admin"] as const;
 
 /** Which roles may enter each protected area. Admin may enter everything. */
+/** No parent area: parents are reached on WhatsApp (decision W1). */
 export const AREA_ROLES = {
   learn: ["student", "admin"],
-  parent: ["parent", "admin"],
   studio: ["content_editor", "admin"],
   admin: ["admin"],
 } as const satisfies Record<string, readonly AppRole[]>;
@@ -17,7 +17,6 @@ export type Area = keyof typeof AREA_ROLES;
 
 export const PROTECTED_PREFIXES: Record<Area, string> = {
   learn: "/learn",
-  parent: "/parent",
   studio: "/studio",
   admin: "/admin",
 };
@@ -34,7 +33,7 @@ export function homeForRole(role: AppRole): string {
     case "content_editor":
       return "/studio";
     case "parent":
-      return "/parent";
+      return "/"; // legacy role: no parent area any more
     case "student":
       return "/learn";
   }

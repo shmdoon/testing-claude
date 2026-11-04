@@ -5,7 +5,6 @@ import { z } from "zod";
 import { requireArea, requireUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { writeAudit } from "@/lib/audit";
 import { echoOnError, type FormValues } from "@/lib/forms";
 
 export type SimpleState = { ok?: boolean; message?: string; error?: string; fieldErrors?: Record<string, string>; values?: FormValues };
@@ -36,22 +35,5 @@ export async function setMyGalleryShare(submissionId: string, share: boolean): P
     .select("id");
   if (error || !data?.length) return { error: "Couldn't update." };
   revalidatePath("/learn/profile");
-  return { ok: true };
-}
-
-/** A parent allows/disallows the gallery for a linked child. */
-export async function setGalleryConsent(studentId: string, allow: boolean): Promise<SimpleState> {
-  const user = await requireArea("parent");
-  if (!uuid.safeParse(studentId).success) return { error: "Invalid." };
-  const { data, error } = await createAdminClient()
-    .from("parent_student_links")
-    .update({ gallery_consent: allow })
-    .eq("parent_id", user.id)
-    .eq("student_id", studentId)
-    .eq("status", "active")
-    .select("id");
-  if (error || !data?.length) return { error: "Couldn't update." };
-  await writeAudit({ actorId: user.id, action: allow ? "gallery.consent_given" : "gallery.consent_withdrawn", targetType: "profile", targetId: studentId });
-  revalidatePath(`/parent/children/${studentId}`);
   return { ok: true };
 }

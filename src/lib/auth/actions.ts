@@ -16,6 +16,7 @@ import {
   signupSchema,
 } from "@/lib/validation/auth";
 import { homeForRole, safeNextPath } from "./roles";
+import { requestConsent } from "@/lib/consent/service";
 
 export type AuthFormState = {
   step: "email" | "code";
@@ -88,15 +89,15 @@ export async function requestSignupCode(_prev: AuthFormState, form: FormData): P
 
     const attr = decodeAttribution((await cookies()).get(ATTRIBUTION_COOKIE)?.value);
     const acquisition = attr ? { utm_source: attr.utm_source, utm_medium: attr.utm_medium, utm_campaign: attr.utm_campaign } : undefined;
-    const base =
-      input.role === "student"
-        ? {
-            signup_role: "student",
-            full_name: input.full_name,
-            class_level: String(input.class_level),
-            parent_email: input.parent_email,
-          }
-        : { signup_role: "parent", full_name: input.full_name };
+    // One account per child; the parent is reached on WhatsApp (no parent accounts).
+    const base = {
+      full_name: input.full_name,
+      class_level: String(input.class_level),
+      parent_phone: input.parent_phone,
+      parent_email: input.parent_email ?? "",
+      parent_name: input.parent_name ?? "",
+      parent_whatsapp_opt_in: "true",
+    };
     const data = acquisition ? { ...base, acquisition } : base;
 
     const supabase = await createClient();
@@ -136,6 +137,10 @@ export async function postSignInPath(userId: string, next?: string | null): Prom
     .maybeSingle();
   if (!profile) return "/login?error=generic";
   if (profile.account_status === "pending_profile") return "/signup/complete";
+  if (profile.account_status === "pending_consent") {
+    // The child has now proved they own the email → message the parent once.
+    await requestConsent(userId, { onlyIfNotSent: true }).catch((e) => console.error("consent request failed", e));
+  }
   return safeNextPath(next, homeForRole(profile.role));
 }
 
@@ -170,19 +175,19 @@ export async function completeProfile(_prev: CompleteProfileState, form: FormDat
     const { data: claims } = await supabase.auth.getClaims();
     if (!claims?.claims?.sub) redirect("/login");
 
-    const { error } =
-      input.role === "student"
-        ? await supabase.rpc("complete_student_profile", {
-            p_full_name: input.full_name,
-            p_class_level: input.class_level,
-            p_parent_email: input.parent_email,
-          })
-        : await supabase.rpc("complete_parent_profile", { p_full_name: input.full_name });
-
+    const { error } = await supabase.rpc("complete_student_profile", {
+      p_full_name: input.full_name,
+      p_class_level: input.class_level,
+      p_parent_phone: input.parent_phone,
+      p_parent_email: (input.parent_email ?? null) as string,
+      p_parent_name: (input.parent_name ?? null) as string,
+      p_whatsapp_opt_in: true,
+    });
     if (error) {
       if (error.code === "22023") return { fieldErrors: { parent_email: "sameAsParent" } };
       return { error: "generic" };
     }
-    redirect(input.role === "student" ? "/learn" : "/parent");
+    await requestConsent(claims.claims.sub).catch((e) => console.error("consent request failed", e));
+    redirect("/learn");
   });
 }

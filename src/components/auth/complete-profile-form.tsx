@@ -1,19 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { completeProfile, type CompleteProfileState } from "@/lib/auth/actions";
-import { NameField, RolePicker, StudentFields } from "./signup-form";
+import { StudentFields } from "./signup-form";
 import { FormError, SubmitButton } from "./form-bits";
 import { t } from "@/i18n";
 
 export function CompleteProfileForm() {
   const [state, action] = useActionState<CompleteProfileState, FormData>(completeProfile, {});
-  const [role, setRole] = useState<"student" | "parent">("student");
-  const fe = state.fieldErrors ?? {};
   return (
     <form action={action} className="space-y-5" noValidate>
-      <RolePicker role={role} onChange={setRole} />
-      {role === "student" ? <StudentFields fieldErrors={fe} values={state.values} /> : <NameField fieldErrors={fe} values={state.values} />}
+      <StudentFields fieldErrors={state.fieldErrors ?? {}} values={state.values} />
       <FormError code={state.error} />
       <SubmitButton>{t("common.continue")}</SubmitButton>
     </form>
