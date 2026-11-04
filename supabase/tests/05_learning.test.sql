@@ -3,8 +3,8 @@ create temp table ids (name text primary key, id uuid) on commit drop;
 grant select, insert on ids to anon, authenticated, service_role;
 
 insert into ids values
-  ('active', tests.create_user('active@example.com', '{"full_name":"A","class_level":"8","parent_email":"pa@example.com"}')),
-  ('pending', tests.create_user('pending@example.com', '{"full_name":"P","class_level":"7","parent_email":"pp@example.com"}')),
+  ('active', tests.create_user('active@example.com', '{"full_name":"A","class_level":"8","parent_phone":"98765 43210","parent_email":"pa@example.com"}')),
+  ('pending', tests.create_user('pending@example.com', '{"full_name":"P","class_level":"7","parent_phone":"98765 43210","parent_email":"pp@example.com"}')),
   ('parent', tests.create_user('pa@example.com', '{"signup_role":"parent","full_name":"PA"}')),
   ('editor', tests.create_user('ed@example.com', '{}')),
   -- seed: AI Explorers (paid) lesson 6 = external task; lesson 1 = preview

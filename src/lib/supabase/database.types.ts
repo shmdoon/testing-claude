@@ -208,44 +208,56 @@ export type Database = {
       consents: {
         Row: {
           created_at: string
+          gallery_consent: boolean
           granted_at: string | null
           id: string
-          parent_email: string
+          method: string | null
+          parent_email: string | null
           parent_id: string | null
+          parent_phone: string | null
           policy_version: string | null
           status: Database["public"]["Enums"]["consent_status"]
           student_id: string
           token_expires_at: string | null
           token_hash: string | null
           updated_at: string
+          whatsapp_opt_in: boolean
           withdrawn_at: string | null
         }
         Insert: {
           created_at?: string
+          gallery_consent?: boolean
           granted_at?: string | null
           id?: string
-          parent_email: string
+          method?: string | null
+          parent_email?: string | null
           parent_id?: string | null
+          parent_phone?: string | null
           policy_version?: string | null
           status?: Database["public"]["Enums"]["consent_status"]
           student_id: string
           token_expires_at?: string | null
           token_hash?: string | null
           updated_at?: string
+          whatsapp_opt_in?: boolean
           withdrawn_at?: string | null
         }
         Update: {
           created_at?: string
+          gallery_consent?: boolean
           granted_at?: string | null
           id?: string
-          parent_email?: string
+          method?: string | null
+          parent_email?: string | null
           parent_id?: string | null
+          parent_phone?: string | null
           policy_version?: string | null
           status?: Database["public"]["Enums"]["consent_status"]
           student_id?: string
           token_expires_at?: string | null
           token_hash?: string | null
           updated_at?: string
+          whatsapp_opt_in?: boolean
           withdrawn_at?: string | null
         }
         Relationships: [
@@ -777,9 +789,10 @@ export type Database = {
       }
       invoices: {
         Row: {
-          buyer_email: string
+          buyer_email: string | null
           buyer_id: string
           buyer_name: string
+          buyer_phone: string | null
           cgst_paise: number
           created_at: string
           emailed_at: string | null
@@ -803,9 +816,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          buyer_email: string
+          buyer_email?: string | null
           buyer_id: string
           buyer_name: string
+          buyer_phone?: string | null
           cgst_paise?: number
           created_at?: string
           emailed_at?: string | null
@@ -829,9 +843,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          buyer_email?: string
+          buyer_email?: string | null
           buyer_id?: string
           buyer_name?: string
+          buyer_phone?: string | null
           cgst_paise?: number
           created_at?: string
           emailed_at?: string | null
@@ -1276,6 +1291,10 @@ export type Database = {
           id: string
           list_price_paise: number
           paid_at: string | null
+          payer_email: string | null
+          payer_name: string | null
+          payer_phone: string | null
+          payment_request_id: string | null
           provider: string
           provider_order_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -1293,6 +1312,10 @@ export type Database = {
           id?: string
           list_price_paise: number
           paid_at?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          payment_request_id?: string | null
           provider: string
           provider_order_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -1310,6 +1333,10 @@ export type Database = {
           id?: string
           list_price_paise?: number
           paid_at?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          payment_request_id?: string | null
           provider?: string
           provider_order_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -1337,6 +1364,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_payment_request_id_fkey"
+            columns: ["payment_request_id"]
+            isOneToOne: false
+            referencedRelation: "payment_requests"
             referencedColumns: ["id"]
           },
           {
@@ -1386,6 +1420,54 @@ export type Database = {
           },
           {
             foreignKeyName: "parent_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_requests: {
+        Row: {
+          course_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          status: string
+          student_id: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          status?: string
+          student_id: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          student_id?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1451,9 +1533,13 @@ export type Database = {
           created_at: string
           email: string
           full_name: string | null
+          gallery_consent: boolean
           id: string
           locale: string
           parent_email: string | null
+          parent_name: string | null
+          parent_phone: string | null
+          parent_whatsapp_opt_in: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
@@ -1464,9 +1550,13 @@ export type Database = {
           created_at?: string
           email: string
           full_name?: string | null
+          gallery_consent?: boolean
           id: string
           locale?: string
           parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
+          parent_whatsapp_opt_in?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
@@ -1477,9 +1567,13 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string | null
+          gallery_consent?: boolean
           id?: string
           locale?: string
           parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
+          parent_whatsapp_opt_in?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
@@ -1653,6 +1747,75 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_messages: {
+        Row: {
+          body: string
+          created_at: string
+          error: string | null
+          id: string
+          params: Json
+          provider_id: string | null
+          related_id: string | null
+          related_type: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          student_id: string | null
+          template: string
+          to_phone: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          params?: Json
+          provider_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status: string
+          student_id?: string | null
+          template: string
+          to_phone: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          params?: Json
+          provider_id?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id?: string | null
+          template?: string
+          to_phone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       course_time_stats: {
@@ -1754,15 +1917,14 @@ export type Database = {
           total_seconds: number
         }[]
       }
-      complete_parent_profile: {
-        Args: { p_full_name: string }
-        Returns: undefined
-      }
       complete_student_profile: {
         Args: {
           p_class_level: number
           p_full_name: string
           p_parent_email: string
+          p_parent_name: string
+          p_parent_phone: string
+          p_whatsapp_opt_in: boolean
         }
         Returns: undefined
       }
@@ -1800,6 +1962,16 @@ export type Database = {
           date: string
           estimated_external_seconds: number
         }[]
+      }
+      grant_consent: {
+        Args: {
+          p_consent_id: string
+          p_gallery: boolean
+          p_method: string
+          p_policy_version: string
+          p_whatsapp_opt_in: boolean
+        }
+        Returns: undefined
       }
       mark_payment_failed: {
         Args: {

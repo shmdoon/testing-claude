@@ -3,7 +3,7 @@ create temp table ids (name text primary key, id uuid) on commit drop;
 grant select on ids to authenticated;
 insert into ids values
   ('p', tests.create_user('ad-parent@example.com', '{"signup_role":"parent","full_name":"P","acquisition":{"utm_source":"google","utm_medium":"cpc","utm_campaign":"ai-for-kids","gclid":"SECRET","evil":"x"}}')),
-  ('s', tests.create_user('plain@example.com', '{"full_name":"S","class_level":"7","parent_email":"x@example.com","acquisition":"not-an-object"}')),
+  ('s', tests.create_user('plain@example.com', '{"full_name":"S","class_level":"7","parent_phone":"98765 43210","parent_email":"x@example.com","acquisition":"not-an-object"}')),
   ('admin', tests.create_user('a@example.com', '{}'));
 update public.profiles set role = 'admin' where id = (select id from ids where name = 'admin');
 

@@ -5,7 +5,7 @@ grant select, insert on ids to anon, authenticated;
 insert into ids values
   ('admin', tests.create_user('admin@example.com', '{}')),
   ('editor', tests.create_user('editor@example.com', '{}')),
-  ('student', tests.create_user('stu@example.com', '{"full_name":"S","class_level":"7","parent_email":"p@example.com"}'));
+  ('student', tests.create_user('stu@example.com', '{"full_name":"S","class_level":"7","parent_phone":"98765 43210","parent_email":"p@example.com"}'));
 update public.profiles set role = 'admin', account_status = 'active' where id = (select id from ids where name = 'admin');
 update public.profiles set role = 'content_editor', account_status = 'active' where id = (select id from ids where name = 'editor');
 

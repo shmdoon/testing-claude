@@ -5,11 +5,12 @@ insert into ids values
   ('admin', tests.create_user('admin@example.com', '{}')),
   ('editor', tests.create_user('ed@example.com', '{}')),
   ('parent', tests.create_user('par@example.com', '{"signup_role":"parent","full_name":"Par"}')),
-  ('asha', tests.create_user('asha@example.com', '{"full_name":"Asha Kapoor","class_level":"8","parent_email":"par@example.com"}')),
-  ('ravi', tests.create_user('ravi@example.com', '{"full_name":"Ravi Shah","class_level":"7","parent_email":"x@example.com"}')),
+  ('asha', tests.create_user('asha@example.com', '{"full_name":"Asha Kapoor","class_level":"8","parent_phone":"98765 43210","parent_email":"par@example.com"}')),
+  ('ravi', tests.create_user('ravi@example.com', '{"full_name":"Ravi Shah","class_level":"7","parent_phone":"98765 43210","parent_email":"x@example.com"}')),
   ('course', '00000000-0000-4000-8000-000000000002'),
   ('lesson', '00000000-0000-4000-8000-000000002006');
 update public.profiles set role = 'admin', account_status = 'active' where id = (select id from ids where name = 'admin');
+update public.profiles set role = 'parent', account_status = 'active' where id = (select id from ids where name = 'parent'); -- legacy role (no parent accounts any more)
 update public.profiles set role = 'content_editor', account_status = 'active' where id = (select id from ids where name = 'editor');
 update public.profiles set account_status = 'active' where id in ((select id from ids where name = 'asha'), (select id from ids where name = 'ravi'));
 insert into public.parent_student_links (parent_id, student_id, status) values ((select id from ids where name = 'parent'), (select id from ids where name = 'asha'), 'active');
@@ -68,7 +69,7 @@ end $$;
 -- --- gallery: needs parent consent; first names only ----------------------------------
 select tests.assert((select count(*) = 0 from public.gallery_items()), 'nothing without parent consent');
 select tests.logout();
-update public.parent_student_links set gallery_consent = true where student_id = (select id from ids where name = 'asha');
+update public.profiles set gallery_consent = true where id = (select id from ids where name = 'asha');
 select tests.login_as((select id from ids where name = 'ravi'));
 select tests.assert((select count(*) = 1 and min(first_name) = 'Asha' from public.gallery_items()), 'consented project visible, first name only');
 select tests.assert((select bool_and(url is not null) from public.gallery_items()), 'url kept for link projects');

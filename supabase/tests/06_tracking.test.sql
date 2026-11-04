@@ -2,8 +2,8 @@
 create temp table ids (name text primary key, id uuid) on commit drop;
 grant select on ids to anon, authenticated, service_role;
 insert into ids values
-  ('s', tests.create_user('s@example.com', '{"full_name":"S","class_level":"8","parent_email":"p@example.com"}')),
-  ('other', tests.create_user('o@example.com', '{"full_name":"O","class_level":"8","parent_email":"q@example.com"}')),
+  ('s', tests.create_user('s@example.com', '{"full_name":"S","class_level":"8","parent_phone":"98765 43210","parent_email":"p@example.com"}')),
+  ('other', tests.create_user('o@example.com', '{"full_name":"O","class_level":"8","parent_phone":"98765 43210","parent_email":"q@example.com"}')),
   ('parent', tests.create_user('p@example.com', '{"signup_role":"parent","full_name":"P"}')),
   ('course', '00000000-0000-4000-8000-000000000001'),
   ('lesson', '00000000-0000-4000-8000-000000001001'),

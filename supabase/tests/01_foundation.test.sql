@@ -6,8 +6,8 @@ create temp table ids (name text primary key, id uuid) on commit drop;
 grant select on ids to anon, authenticated;
 
 insert into ids values
-  ('student', tests.create_user('Stu@Example.com', '{"full_name":"Asha","class_level":"7","parent_email":"Parent@Example.com","signup_role":"student"}')),
-  ('student2', tests.create_user('stu2@example.com', '{"full_name":"Ravi","class_level":"8","parent_email":"other@example.com"}')),
+  ('student', tests.create_user('Stu@Example.com', '{"full_name":"Asha","class_level":"7","parent_phone":"98765 43210","parent_email":"Parent@Example.com","signup_role":"student"}')),
+  ('student2', tests.create_user('stu2@example.com', '{"full_name":"Ravi","class_level":"8","parent_phone":"98765 43210","parent_email":"other@example.com"}')),
   ('google_student', tests.create_user('g@example.com', '{}')),
   ('sneaky', tests.create_user('sneaky@example.com', '{"signup_role":"admin","full_name":"X"}')),
   ('parent', tests.create_user('parent@example.com', '{"signup_role":"parent","full_name":"Meera"}')),
@@ -22,7 +22,7 @@ values ((select id from ids where name = 'parent'), (select id from ids where na
 -- --- signup trigger ---------------------------------------------------------
 select tests.assert(
   (select role = 'student' and account_status = 'pending_consent' and email = 'stu@example.com'
-          and parent_email = 'parent@example.com' and class_level = 7
+          and parent_email = 'parent@example.com' and parent_phone = '+919876543210' and class_level = 7
      from public.profiles where id = (select id from ids where name = 'student')),
   'student signup creates pending_consent profile with normalised emails');
 
@@ -40,8 +40,13 @@ select tests.assert(
   'signup without details is pending_profile');
 
 select tests.assert(
-  (select role = 'parent' and account_status = 'active' from public.profiles where id = (select id from ids where name = 'parent')),
-  'parent signup is active');
+  (select role = 'student' and account_status = 'pending_profile' from public.profiles where id = (select id from ids where name = 'parent')),
+  'signup_role "parent" is ignored: every signup is a student');
+select tests.assert(
+  (select parent_phone = '+919876543210' and status = 'pending' from public.consents where student_id = (select id from ids where name = 'student')),
+  'consent row carries the parent WhatsApp number');
+select tests.assert(private.normalize_phone('098765 43210') = '+919876543210' and private.normalize_phone('+44 7700 900123') = '+447700900123'
+  and private.normalize_phone('12345') is null and private.normalize_phone('919876543210') = '+919876543210', 'phone normalisation');
 
 -- --- anon sees nothing --------------------------------------------------------
 select tests.login_anon();
@@ -77,6 +82,16 @@ end $$;
 do $$ begin
   update public.profiles set parent_email = 'me2@example.com' where id = auth.uid();
   raise exception 'student must not be able to change parent email directly';
+exception when insufficient_privilege then null;
+end $$;
+do $$ begin
+  update public.profiles set parent_phone = '+919999999999' where id = auth.uid();
+  raise exception 'student must not change the parent phone';
+exception when insufficient_privilege then null;
+end $$;
+do $$ begin
+  update public.profiles set gallery_consent = true where id = auth.uid();
+  raise exception 'student must not grant gallery consent';
 exception when insufficient_privilege then null;
 end $$;
 
@@ -119,16 +134,22 @@ select tests.logout();
 -- --- complete_student_profile ----------------------------------------------
 select tests.login_as((select id from ids where name = 'google_student'));
 do $$ begin
-  perform public.complete_student_profile('G', 7::smallint, 'g@example.com');
+  perform public.complete_student_profile('G', 7::smallint, '9876543210', 'g@example.com', null, true);
   raise exception 'own email must be rejected as parent email';
 exception when sqlstate '22023' then null;
 end $$;
-select public.complete_student_profile('Gita', 8::smallint, 'GParent@example.com');
+do $$ begin
+  perform public.complete_student_profile('G', 7::smallint, '12345', null, null, true);
+  raise exception 'invalid phone must be rejected';
+exception when sqlstate '22023' then null;
+end $$;
+select public.complete_student_profile('Gita', 8::smallint, '+91 98765 43210', 'GParent@example.com', 'Geeta', true);
 select tests.assert(
-  (select account_status = 'pending_consent' and parent_email = 'gparent@example.com' from public.profiles where id = auth.uid()),
+  (select account_status = 'pending_consent' and parent_email = 'gparent@example.com' and parent_phone = '+919876543210'
+          and parent_name = 'Geeta' and parent_whatsapp_opt_in from public.profiles where id = auth.uid()),
   'complete_student_profile moves to pending_consent');
 do $$ begin
-  perform public.complete_student_profile('Gita', 8::smallint, 'x@example.com');
+  perform public.complete_student_profile('Gita', 8::smallint, '9876543210', null, null, false);
   raise exception 'profile can only be completed once';
 exception when insufficient_privilege then null;
 end $$;

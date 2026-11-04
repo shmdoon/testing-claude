@@ -3,7 +3,7 @@ create temp table ids (name text primary key, id uuid) on commit drop;
 grant select, insert on ids to anon, authenticated, service_role;
 insert into ids values
   ('parent', tests.create_user('parent@example.com', '{"signup_role":"parent","full_name":"Meera Rao"}')),
-  ('kid', tests.create_user('kid@example.com', '{"full_name":"Asha Rao","class_level":"8","parent_email":"parent@example.com"}')),
+  ('kid', tests.create_user('kid@example.com', '{"full_name":"Asha Rao","class_level":"8","parent_phone":"98765 43210","parent_email":"parent@example.com"}')),
   ('other', tests.create_user('other@example.com', '{"signup_role":"parent","full_name":"Other"}')),
   ('editor', tests.create_user('ed@example.com', '{}')),
   ('admin', tests.create_user('admin@example.com', '{}')),
@@ -34,9 +34,9 @@ select tests.assert(private.next_document_number('XINV') like 'XINV/____-__/0000
 
 -- --- order → fulfil ---------------------------------------------------------------
 insert into public.coupons (code, kind, value) values ('FAMILY10', 'percent', 10);
-insert into public.orders (buyer_id, student_id, course_id, list_price_paise, discount_paise, total_paise, coupon_id, provider, provider_order_id)
+insert into public.orders (buyer_id, student_id, course_id, list_price_paise, discount_paise, total_paise, coupon_id, provider, provider_order_id, payer_name)
 select (select id from ids where name = 'parent'), (select id from ids where name = 'kid'), (select id from ids where name = 'course'),
-       49900, 4990, 44910, (select id from public.coupons where code = 'FAMILY10'), 'razorpay', 'order_live_1';
+       49900, 4990, 44910, (select id from public.coupons where code = 'FAMILY10'), 'razorpay', 'order_live_1', 'Meera Rao';
 insert into ids select 'order', id from public.orders where provider_order_id = 'order_live_1';
 
 do $$ begin
