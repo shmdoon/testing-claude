@@ -93,5 +93,6 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
    - Estimated external time shown separately and labelled "estimated".
    - `/admin/submissions` review queue (filters: status, course, lesson, tool, date) with approve / needs-revision + feedback; approval completes the lesson step.
    - Opt-in gallery of approved projects (first name only, student + parent opt-in, revocable).
-7. **Consent + legal + polish** — parent consent email + signed token, data deletion request, a11y + Lighthouse pass.
+   - **Revised 2026-11-04:** no parent dashboard — parents are reached on WhatsApp (see DECISIONS W1–W8).
+7. **Consent + legal + polish** — ~~parent consent email~~ (done via WhatsApp link), data deletion request, legal pages, a11y + Lighthouse pass.
 8. **Deployment docs** — `docs/DEPLOY.md` (Vercel Pro, Cloudflare/OpenNext), env, Razorpay live switch, backups.

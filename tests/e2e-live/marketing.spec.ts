@@ -56,11 +56,13 @@ test("ad click → campaign page → lead saved with attribution → email → a
 
 test("signup keeps first-touch campaign (source/medium/campaign only)", async ({ page }) => {
   await page.goto(`/lp/ai-for-kids?utm_source=meta&utm_medium=paid_social&utm_campaign=e2e-signup-${RUN}&fbclid=abc`);
-  const email = `e2e-parent-${RUN}-signup@example.com`;
+  const email = `e2e-student-${RUN}-signup@example.com`;
   await page.goto("/signup");
-  await page.getByText("Parent or guardian", { exact: true }).click();
-  await page.getByLabel("Your name").fill("Rohan");
-  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Student's name").fill("Rohan");
+  await page.getByLabel("Your class").selectOption("8");
+  await page.getByLabel("Parent's WhatsApp number").fill("98765 43210");
+  await page.getByLabel(/agrees to receive messages/).check();
+  await page.getByLabel("Student's email (used to sign in)").fill(email);
   await page.getByRole("button", { name: "Create account" }).click();
   // Supabase may refuse to email example.com / rate-limit; the account row is what we check.
   await page.waitForTimeout(3_000);

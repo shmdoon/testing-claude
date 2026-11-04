@@ -195,7 +195,7 @@ test("pending-consent student can't enrol or open lessons; paid lessons are lock
   const pending = await student("8", false);
   await signIn(page, pending.email);
   await page.goto("/learn/what-is-ai");
-  await expect(page.getByText("We've asked your parent or guardian to approve your account")).toBeVisible();
+  await expect(page.getByText("We've sent your parent or guardian a WhatsApp message to approve your account").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Enroll for free" })).toHaveCount(0);
   await page.goto("/learn/what-is-ai/spot-the-ai");
   await expect(page.getByRole("heading", { name: "Waiting for your parent or guardian to approve your account" })).toBeVisible();

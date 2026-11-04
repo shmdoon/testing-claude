@@ -85,7 +85,7 @@ test.describe("public pages", () => {
 });
 
 test.describe("auth gates", () => {
-  for (const path of ["/learn", "/parent", "/admin/payments", "/studio"]) {
+  for (const path of ["/learn", "/learn/checkout/ai-explorers", "/admin/payments", "/studio"]) {
     test(`signed-out visitor to ${path} is sent to login`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/login\\?next=${encodeURIComponent(path).replace(/%/g, "%")}`));
@@ -100,21 +100,30 @@ test.describe("auth gates", () => {
     await expect(page.getByText("Enter a valid email address.")).toBeVisible();
   });
 
-  test("student signup asks for class and parent email; parent signup does not", async ({ page }) => {
+  test("one account per child: signup asks for the parent's WhatsApp, no parent role", async ({ page }) => {
     await page.goto("/signup");
+    await expect(page.getByText("I am a…")).toHaveCount(0);
+    await expect(page.getByLabel("Student's name")).toBeVisible();
     await expect(page.getByLabel("Your class")).toBeVisible();
-    await expect(page.getByLabel("Parent or guardian's email")).toBeVisible();
-    await page.getByText("Parent or guardian", { exact: true }).click();
-    await expect(page.getByLabel("Parent or guardian's email")).toBeHidden();
-    await expect(page.getByLabel("Your name")).toBeVisible();
+    await expect(page.getByLabel("Parent's WhatsApp number")).toBeVisible();
+    await expect(page.getByLabel("Parent's email (optional, for invoices)")).toBeVisible();
+    const res = await page.goto("/parent");
+    expect(res?.status()).toBe(404);
   });
 
-  test("student signup rejects own email as parent email", async ({ page }) => {
+  test("signup validates the WhatsApp number, agreement and parent email", async ({ page }) => {
     await page.goto("/signup");
-    await page.getByLabel("Your name").fill("Asha");
+    await page.getByLabel("Student's name").fill("Asha");
     await page.getByLabel("Your class").selectOption("7");
-    await page.getByLabel("Parent or guardian's email").fill("asha@example.com");
-    await page.getByLabel("Email address").fill("asha@example.com");
+    await page.getByLabel("Parent's WhatsApp number").fill("12345");
+    await page.getByLabel("Parent's email (optional, for invoices)").fill("asha@example.com");
+    await page.getByLabel("Student's email (used to sign in)").fill("asha@example.com");
+    await page.getByRole("button", { name: "Create account" }).click();
+    await expect(page.getByText("Enter a valid WhatsApp number, e.g. 98765 43210.")).toBeVisible();
+    await expect(page.getByText("Please confirm the parent agrees to WhatsApp messages.")).toBeVisible();
+    await expect(page.getByLabel("Parent's WhatsApp number")).toHaveValue("12345"); // input kept
+    await page.getByLabel("Parent's WhatsApp number").fill("98765 43210");
+    await page.getByLabel(/agrees to receive messages/).check();
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText("The parent email must be different from your own.")).toBeVisible();
   });

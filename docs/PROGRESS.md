@@ -134,3 +134,18 @@
 - Admin tables cap at 100–200 rows per view (search/filters narrow); pagination later if needed.
 
 **Next:** Milestone 7 — parent consent flow (email + signed token, creates the parent link), data deletion requests, legal pages content structure, accessibility pass, Lighthouse pass on lesson pages.
+
+## Parents on WhatsApp (requirement update) ✅ (2026-11-04)
+
+**Done**
+- Migrations `…0800_whatsapp_parents`, `…0810_invoice_buyer_parent_only` (applied to live): parent contact on the child's profile, WhatsApp consent + gallery fields, `payment_requests`, payer on orders/invoices, `whatsapp_messages` outbox.
+- Signup is child-only (parent name, WhatsApp number, optional email, opt-in); `/parent` area removed.
+- In-app checkout with payer details + 18+ confirmation; "Ask my parent to pay" → WhatsApp link → `/pay/<token>` (no login).
+- Parent approval via WhatsApp link `/consent/<token>`; admin manual approval (audited); resend link.
+- WhatsApp sending: Cloud API when keys exist, else `/admin/whatsapp` outbox (wa.me + mark sent). Invoice/refund, weekly summary (cron + button), teacher feedback.
+- Signed invoice links; admin student page shows parent contact + gallery permission.
+- Tests: 232 unit, 10 SQL suites, 28 offline E2E, 25 live E2E (consent link, pay link, outbox, weekly summary, feedback).
+
+**Needs from you:** WhatsApp Cloud API number + token and the 6 approved templates (SETUP §4), `LINK_SECRET`, `CRON_SECRET` + a weekly schedule. Until then everything works through the manual outbox.
+
+**Next:** Milestone 7 — data deletion requests, legal page content, accessibility + Lighthouse pass on lesson pages.

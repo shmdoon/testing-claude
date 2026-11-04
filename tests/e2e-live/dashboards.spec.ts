@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { RUN, admin, createUser, deleteUser, signIn } from "./helpers";
+import { RUN, admin, createUser, deleteUser, lastWhatsApp, linkIn, signIn } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 let kid: { id: string; email: string };
-let parent: { id: string; email: string };
+let newbie: { id: string; email: string };
 let editor: { id: string; email: string };
 let adminUser: { id: string; email: string };
 let other: { id: string; email: string };
@@ -16,13 +16,12 @@ function istDay(offset: number) {
 }
 
 test.beforeAll(async () => {
-  parent = await createUser("parent", { full_name: "Meera Kapoor" });
-  kid = await createUser("student", { full_name: "Asha Kapoor", class_level: "8", parent_email: parent.email });
+  kid = await createUser("student", { full_name: "Asha Kapoor", class_level: "8", parent_name: "Meera Kapoor" });
+  newbie = await createUser("student", { full_name: "Ravi Menon", class_level: "7", parent_phone: "+91 91234 56789" });
   editor = await createUser("content_editor");
   adminUser = await createUser("admin");
-  other = await createUser("parent", { full_name: "Role Test" });
+  other = await createUser("student", { full_name: "Role Test", class_level: "7" });
   await admin.from("profiles").update({ account_status: "active" }).eq("id", kid.id);
-  await admin.from("parent_student_links").insert({ parent_id: parent.id, student_id: kid.id, status: "active" });
   const { data: courses } = await admin.from("courses").select("id, slug");
   const byslug = Object.fromEntries((courses ?? []).map((c) => [c.slug, c.id]));
   for (const slug of ["what-is-ai", "ai-explorers"]) await admin.from("enrollments").insert({ user_id: kid.id, course_id: byslug[slug]!, source: "admin" });
@@ -48,7 +47,7 @@ test.beforeAll(async () => {
   });
 });
 test.afterAll(async () => {
-  for (const u of [kid, parent, editor, adminUser, other]) if (u) await deleteUser(u.id);
+  for (const u of [kid, newbie, editor, adminUser, other]) if (u) await deleteUser(u.id);
 });
 
 test("student: streak, badges, chart with table + keyboard tooltip, profile name", async ({ page }) => {
@@ -96,32 +95,50 @@ test("teacher review queue: feedback required for revision, approve completes, e
   await expect(page).toHaveURL(/\/studio$/); // editors can't open admin (revenue)
 });
 
-test("parent: child card, child detail with chart + feedback, gallery consent → gallery shows first name only", async ({ page }) => {
-  await signIn(page, parent.email);
-  await page.goto("/parent");
-  const card = page.getByTestId("child-card");
-  await expect(card).toContainText("Asha K.");
-  // Seeded days (today, -1, -2) that fall in this Monday-start IST week, 10 min each.
-  const now = new Date(Date.now() + 5.5 * 3600_000);
-  const monday = new Date(now);
-  monday.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));
-  const inWeek = [0, -1, -2].filter((d) => istDay(d) >= monday.toISOString().slice(0, 10)).length;
-  await expect(card).toContainText(`This week${inWeek * 10} min`);
-  await expect(card).toContainText("+15 min on other sites (est.)");
-  await card.click();
-  await expect(page.getByRole("heading", { level: 1, name: "Asha K." })).toBeVisible();
-  await expect(page.getByText("Teacher: “Great page — well done!”")).toBeVisible();
-  await expect(page.locator('svg rect[tabindex="0"]')).toHaveCount(30);
+test("parent approves via the WhatsApp link (no login) → account active, gallery choice saved", async ({ page, browser }) => {
+  // Signing in proves the child owns the email → the approval link goes to the parent once.
+  await signIn(page, newbie.email);
+  await expect.poll(async () => (await lastWhatsApp(newbie.id, "consent_request"))?.to_phone).toBe("+919123456789");
+  await signIn(page, newbie.email);
+  const { count } = await admin.from("whatsapp_messages").select("id", { count: "exact", head: true }).eq("student_id", newbie.id).eq("template", "consent_request");
+  expect(count).toBe(1); // not re-sent on every sign-in
+  const msg = await lastWhatsApp(newbie.id, "consent_request");
+  const link = linkIn(msg!.body);
+  expect(link).toMatch(/\/consent\/[A-Za-z0-9_-]{40,}$/);
 
-  // Gallery empty until the parent allows it.
+  const ctx = await browser.newContext();
+  const p = await ctx.newPage();
+  await p.goto(new URL(link).pathname);
+  await expect(p.getByText("Ravi", { exact: false }).first()).toBeVisible();
+  await p.getByRole("checkbox", { name: /parent or legal guardian/ }).check();
+  await p.getByRole("checkbox", { name: /class gallery/ }).check();
+  await p.getByRole("button", { name: "Approve account" }).click();
+  await expect(p.getByRole("status")).toContainText("account is approved");
+  const { data: prof } = await admin.from("profiles").select("account_status, gallery_consent, parent_whatsapp_opt_in").eq("id", newbie.id).single();
+  expect(prof).toEqual({ account_status: "active", gallery_consent: true, parent_whatsapp_opt_in: true });
+  // The link is single-use.
+  await p.goto(new URL(link).pathname);
+  await expect(p.getByRole("button", { name: "Approve account" })).toHaveCount(0);
+  await p.goto("/consent/not-a-real-token-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  await expect(p.getByRole("button", { name: "Approve account" })).toHaveCount(0);
+  await ctx.close();
+});
+
+test("teacher feedback reaches the parent on WhatsApp; gallery needs parent permission (first name only)", async ({ page }) => {
+  const fb = await lastWhatsApp(kid.id, "project_feedback");
+  expect(fb?.body).toContain("Great page — well done!");
+  expect(fb?.to_phone).toBe("+919876543210");
+
   await signIn(page, kid.email);
   await page.goto("/learn/gallery");
   await expect(page.getByText("No projects in the gallery yet.")).toBeVisible();
 
-  await signIn(page, parent.email);
-  await page.goto(`/parent/children/${kid.id}`);
-  await page.getByRole("switch", { name: /Allow Asha's approved projects/ }).check();
-  await expect.poll(async () => (await admin.from("parent_student_links").select("gallery_consent").eq("student_id", kid.id).single()).data?.gallery_consent).toBe(true);
+  // Parent said yes on WhatsApp → admin records it on the student page.
+  await signIn(page, adminUser.email);
+  await page.goto(`/admin/students/${kid.id}`);
+  await expect(page.getByText("Meera Kapoor")).toBeVisible();
+  await page.getByRole("switch", { name: /Parent allows gallery sharing/ }).check();
+  await expect.poll(async () => (await admin.from("profiles").select("gallery_consent").eq("id", kid.id).single()).data?.gallery_consent).toBe(true);
 
   await signIn(page, kid.email);
   await page.goto("/learn/gallery");
@@ -135,6 +152,20 @@ test("parent: child card, child detail with chart + feedback, gallery consent �
   await page.goto("/learn/profile");
   await page.getByRole("switch", { name: /Show in the class gallery/ }).uncheck();
   await expect.poll(async () => (await admin.from("external_submissions").select("share_in_gallery").eq("user_id", kid.id).single()).data?.share_in_gallery).toBe(false);
+});
+
+test("admin: weekly WhatsApp summary is queued once per child per week", async ({ page }) => {
+  await signIn(page, adminUser.email);
+  await page.goto("/admin/whatsapp");
+  await page.getByRole("button", { name: "Send weekly summaries now" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "children:" })).toBeVisible();
+  const w = await lastWhatsApp(kid.id, "weekly_summary");
+  expect(w?.body).toContain("Asha");
+  expect(w?.body).toContain("30 min");
+  await page.getByRole("button", { name: "Send weekly summaries now" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "children:" })).toBeVisible();
+  const { count } = await admin.from("whatsapp_messages").select("id", { count: "exact", head: true }).eq("student_id", kid.id).eq("template", "weekly_summary");
+  expect(count).toBe(1);
 });
 
 test("admin: overview, students + detail, engagement + CSV, role change audited", async ({ page }) => {

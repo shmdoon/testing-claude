@@ -14,7 +14,7 @@ export async function createUser(role: Database["public"]["Enums"]["app_role"], 
   const { data, error } = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    user_metadata: { full_name: `E2E ${role}`, signup_role: role === "parent" ? "parent" : "student", ...meta },
+    user_metadata: { full_name: `E2E ${role}`, ...(role === "student" ? { parent_phone: "98765 43210", parent_whatsapp_opt_in: "true" } : {}), ...meta },
   });
   if (error) throw error;
   if (role === "content_editor" || role === "admin") {
@@ -22,6 +22,21 @@ export async function createUser(role: Database["public"]["Enums"]["app_role"], 
     if (e) throw e;
   }
   return { id: data.user.id, email };
+}
+
+/** The newest WhatsApp message (outbox) for a student, optionally by template. */
+export async function lastWhatsApp(studentId: string, template?: string) {
+  let q = admin.from("whatsapp_messages").select("template, body, status, to_phone").eq("student_id", studentId).order("created_at", { ascending: false }).limit(1);
+  if (template) q = q.eq("template", template);
+  const { data } = await q;
+  return data?.[0] ?? null;
+}
+
+/** First https link inside a WhatsApp message body. */
+export function linkIn(body: string): string {
+  const m = /https?:\/\/\S+/.exec(body);
+  if (!m) throw new Error(`no link in: ${body}`);
+  return m[0];
 }
 
 /** Signs the browser in via the magic-link route (token from the admin API). */

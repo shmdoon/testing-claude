@@ -19,7 +19,7 @@ test("course detail shows outcomes, locked lessons, price and the preview activi
   await expect(page.getByText("Module 2 · Make it real")).toBeVisible();
   await expect(page.getByText("Publish your AI-made web page")).toBeVisible();
   await expect(page.getByText("(Locked)").first()).toBeAttached();
-  await expect(page.getByRole("link", { name: "Buy for ₹499" })).toHaveAttribute("href", "/parent/checkout/ai-explorers");
+  await expect(page.getByRole("link", { name: "Buy for ₹499" })).toHaveAttribute("href", "/learn/checkout/ai-explorers");
   await expect(page.getByRole("heading", { name: "Try the first activity" })).toBeVisible();
   await expect(page.getByText("Match each input with what an AI might learn")).toBeVisible();
 });

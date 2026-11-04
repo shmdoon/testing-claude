@@ -128,3 +128,34 @@ minors overrode a requirement. Newest at the bottom of each section.
 | D5 | Review queue lives at `/studio/submissions` (content editors + admins, decision E7) and `/admin/submissions`. Reviews go through `review_submission` (staff check + audit in SQL). The queue shows only first name + class; private uploads are previewed via 5-minute signed URLs. Reviewed cards stay in place with their outcome. | Least data for reviewers; smooth queue work. |
 | D6 | Gallery is **members-only** (active accounts and staff), never public: an approved URL/screenshot project appears only if the student shared it AND a linked parent turned on `gallery_consent`. First name + class only; screenshots are re-served by the app (`/api/gallery/[id]`) after an eligibility check; outbound links use `noopener noreferrer nofollow ugc`. Students can withdraw anytime (profile), parents can switch consent off, staff can remove an item. | Minors' privacy (E8). Note for reviewers: check that a project page itself doesn't show a surname/photo before approving. |
 | D7 | Role management uses `admin_set_role` (audited; can't change own role). | S4. |
+
+## Parents on WhatsApp, no parent dashboard (requirement update 2026-11-04)
+
+Supersedes the parent-account parts of M1, M5 and M6 above.
+
+- **W1 One account per child.** Every signup is a student account; the parent's name, WhatsApp number (required)
+  and email (optional) are stored on the child's profile. The `/parent` area is removed; legacy `parent` profiles
+  land on `/`. `parent_student_links` stays in the schema (unused) so old data isn't lost.
+- **W2 Payment inside the child's account.** `/learn/checkout/[course]` records the payer (name, phone, optional
+  email) and requires "I am a parent/guardian, 18+" — a minor can't be the contracting party. Invoices are issued
+  to the parent (never the child's email; fallback "Parent/guardian of <child>"). "Ask my parent to pay" sends a
+  7-day payment link on WhatsApp → `/pay/[token]` works without logging in (token hashed in DB, single course,
+  marked paid on fulfilment, noindex).
+- **W3 Parental consent kept, but via WhatsApp.** DPDP Act §9 requires verifiable parental consent for under-18s,
+  and the brief says pick the safer option for minors. After the child proves the email (first sign-in — never at
+  raw signup, so strangers can't make us message arbitrary numbers) the parent gets a WhatsApp link
+  `/consent/[token]` (hashed, 7 days, single use) to approve, opt in to updates and optionally allow the gallery.
+  Admins can approve on the parent's behalf (note required, audited) after a call/WhatsApp chat. *Can be relaxed
+  if your lawyer advises otherwise — the flow is isolated in `src/lib/consent`.*
+- **W4 Sending "Both".** WhatsApp Cloud API template messages when `WHATSAPP_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID`
+  are set; otherwise (or if the API fails) the message goes to the `/admin/whatsapp` outbox with an
+  "Open in WhatsApp" (wa.me) button and "Mark as sent". Every message is stored (`whatsapp_messages`) for audit.
+- **W5 Messages.** `consent_request`, `payment_link`, `invoice_ready`, `refund_processed`, `weekly_summary`,
+  `project_feedback` (`src/lib/whatsapp/templates.ts` — names/parameter order must match approved templates).
+  Updates only go to parents who opted in; consent/payment/invoice are transactional.
+- **W6 Links in messages** are random tokens (hashed at rest) or HMAC-signed short-lived links (invoice PDFs,
+  `LINK_SECRET`) — no login needed, nothing guessable, no personal data in URLs.
+- **W7 Weekly summary** via `/api/cron/weekly-summary` (Bearer `CRON_SECRET`) or the admin button; idempotent per
+  child per 7-day window.
+- **W8 Gallery permission** is now `profiles.gallery_consent`, set by the parent on the consent page or by an
+  admin on the student page (when the parent says yes on WhatsApp). Student opt-in per project still applies.

@@ -42,15 +42,34 @@ update public.profiles set role = 'admin', account_status = 'active'
 where email = 'you@example.com';
 ```
 
-## 4. Activate a test student (until the consent email ships in M7)
+## 4. Parent approval & WhatsApp
 
-Students can't enrol or save work until a parent consents. To try the player with a test student:
+A new student stays *pending* until a parent approves. After the child's first sign-in the parent gets a WhatsApp
+link to `/consent/<token>`. Without WhatsApp API keys the message waits at **/admin/whatsapp** — tap
+"Open in WhatsApp", send, then "Mark as sent". Admins can also approve from the student page (note required).
 
-```sql
-update public.profiles set account_status = 'active' where email = 'student@example.com';
-update public.consents set status = 'granted', granted_at = now() where student_id =
-  (select id from public.profiles where email = 'student@example.com');
-```
+**Automatic sending (WhatsApp Cloud API):**
+1. Meta Business → WhatsApp → add and verify a business phone number (or use a BSP such as Gupshup/Interakt that
+   exposes the Cloud API). Put `WHATSAPP_PHONE_NUMBER_ID` and a permanent system-user token `WHATSAPP_TOKEN` in the env.
+2. WhatsApp Manager → Message templates → create these (language `en`, or set `WHATSAPP_TEMPLATE_LANGUAGE`).
+   Body variables in this order — the wording can differ, see `src/lib/whatsapp/templates.ts` for ours:
+   | template | category | variables |
+   |---|---|---|
+   | `consent_request` | Utility | {{1}} child first name, {{2}} approval link |
+   | `payment_link` | Utility | {{1}} child, {{2}} course, {{3}} amount, {{4}} link |
+   | `invoice_ready` | Utility | {{1}} child, {{2}} course, {{3}} amount, {{4}} invoice no., {{5}} link |
+   | `refund_processed` | Utility | {{1}} child, {{2}} course, {{3}} amount, {{4}} credit-note link |
+   | `weekly_summary` | Utility | {{1}} child, {{2}} time, {{3}} lessons, {{4}} streak, {{5}} highlight |
+   | `project_feedback` | Utility | {{1}} child, {{2}} lesson, {{3}} result, {{4}} feedback |
+3. Restart — `/admin/whatsapp` shows "WhatsApp Cloud API (automatic)". Failed sends fall back to the outbox.
+
+**Secrets:** set `LINK_SECRET` (random 32+ chars, signs invoice links) and `CRON_SECRET`.
+
+**Weekly summary:** schedule a weekly `GET https://<domain>/api/cron/weekly-summary` with header
+`Authorization: Bearer <CRON_SECRET>` (Vercel Cron, Cloudflare Cron Trigger, or any scheduler) — e.g. Sunday 18:00 IST.
+Running it twice in a week is harmless.
+
+To skip approval for a local test student: `update profiles set account_status = 'active' where email = '…';`
 
 ## 5. Payments (Razorpay) and email (Resend)
 
@@ -93,7 +112,6 @@ accountant. New invoices use the new values; issued ones never change.
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.
-- To try buying as a parent locally, link a parent to an active student:
-  `insert into parent_student_links (parent_id, student_id, status) values ('<parent uuid>', '<student uuid>', 'active');`
+- To try buying locally: sign in as an active student → course → "Pay now" (mock gateway).
 - `npm run test:e2e:live` runs signed-in flows (Studio, admin tools, catalogue) against the project in
   `.env.local`. It creates throwaway `@example.com` users/content via the secret key and deletes them afterwards.
