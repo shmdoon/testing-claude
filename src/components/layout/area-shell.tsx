@@ -8,7 +8,7 @@ import { requireArea } from "@/lib/auth/dal";
 import { PROTECTED_PREFIXES, type Area } from "@/lib/auth/roles";
 import { t } from "@/i18n";
 
-export type AreaNavItem = { href: string; label: string; icon: React.ReactNode; exact?: boolean };
+export type AreaNavItem = { href: string; label: string; icon: React.ReactNode; exact?: boolean; match?: string[] };
 
 /**
  * Shared chrome for /learn, /parent, /admin and /studio. The chrome is static
@@ -47,7 +47,7 @@ export function AreaShell({
           <ul className="flex gap-1">
             {nav.map((item) => (
               <li key={item.href}>
-                <NavLink href={item.href} exact={item.exact}>
+                <NavLink href={item.href} exact={item.exact} match={item.match}>
                   <span aria-hidden className="[&_svg]:size-5">
                     {item.icon}
                   </span>
@@ -89,17 +89,6 @@ export function PageHeader({ title, description }: { title: string; description?
     <div className="mb-6 space-y-1">
       <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
       {description && <p className="text-muted-foreground">{description}</p>}
-    </div>
-  );
-}
-
-export function ComingSoon({ title, milestone }: { title: string; milestone: number }) {
-  return (
-    <div>
-      <PageHeader title={title} />
-      <div className="rounded-2xl border-2 border-dashed p-8 text-center text-muted-foreground">
-        {t("common.comingSoon")} · Milestone {milestone}
-      </div>
     </div>
   );
 }

@@ -116,3 +116,15 @@ minors overrode a requirement. Newest at the bottom of each section.
 | MK5 | No invented social proof: testimonials and stats render only when real entries are added to `src/content/marketing.ts`. | Honesty; advertising standards. |
 | MK6 | SEO: metadata + Open Graph/Twitter, generated share image (`opengraph-image.tsx`), JSON-LD (EducationalOrganization, FAQPage, Course list with INR offers), `sitemap.xml`, `robots.txt` (app areas, API and `/lp/` disallowed). | Organic + social sharing. |
 | MK7 | Performance: client bundles must not import Zod modules (constants like `CLASS_LEVELS`, `PHASES` live in zod-free files). Landing mobile Lighthouse went 74 → 90–93. | Brief: Lighthouse mobile ≥ 85. |
+
+## Dashboards, review & gallery (Milestone 6)
+
+| # | Decision | Why |
+|---|----------|-----|
+| D1 | Charts are hand-built SVG (no chart library) following the dataviz method: palette slots blue/orange validated with `validate_palette.js` in light AND dark (separate dark steps), ≤24px columns, 4px rounded tops, 2px surface gap between stacked segments, hairline grid, legend for ≥2 series, per-column tooltip on hover **and keyboard focus**, a table view, whole-number ticks for counts. | Accessible, light (no extra JS library), consistent in both themes. |
+| D2 | Every time chart shows **active** time and **estimated** external time as separate, labelled series — never summed into one number. | Requirement E6. |
+| D3 | Admin reports run as `security definer` SQL functions that first check `is_admin()` (`admin_overview`, `admin_students`, `admin_engagement`); per-student views reuse `getStudentStats()` with the caller's client so RLS decides (self / linked parent / admin). Revenue excludes mock-gateway orders (shown separately as "test"). | One access model; reports stay fast in SQL. |
+| D4 | Badges and streaks are computed from existing data (no tables): streak = consecutive India-time days with active time, counted from today or yesterday. | Nothing extra to keep in sync. |
+| D5 | Review queue lives at `/studio/submissions` (content editors + admins, decision E7) and `/admin/submissions`. Reviews go through `review_submission` (staff check + audit in SQL). The queue shows only first name + class; private uploads are previewed via 5-minute signed URLs. Reviewed cards stay in place with their outcome. | Least data for reviewers; smooth queue work. |
+| D6 | Gallery is **members-only** (active accounts and staff), never public: an approved URL/screenshot project appears only if the student shared it AND a linked parent turned on `gallery_consent`. First name + class only; screenshots are re-served by the app (`/api/gallery/[id]`) after an eligibility check; outbound links use `noopener noreferrer nofollow ugc`. Students can withdraw anytime (profile), parents can switch consent off, staff can remove an item. | Minors' privacy (E8). Note for reviewers: check that a project page itself doesn't show a surname/photo before approving. |
+| D7 | Role management uses `admin_set_role` (audited; can't change own role). | S4. |

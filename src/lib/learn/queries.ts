@@ -7,6 +7,8 @@ import { blockSchema, type Block } from "@/content/blocks/schema";
 import { gradeBlock, isGradable, sanitizeBlocksForStudent, seededShuffle, type GradeResult, type StudentBlock } from "@/content/blocks/grading";
 import { canUseTool } from "./age";
 import { checkLessonAccess, isStaff, type LessonAccess } from "./access";
+import { streak } from "./badges";
+import { addDays, istDate } from "@/lib/reports/days";
 
 export type LessonStatus = "not_started" | "in_progress" | "awaiting_review" | "completed";
 
@@ -282,7 +284,9 @@ export async function getStudentDashboard() {
     activeMinutes: Math.round((week?.active_seconds ?? 0) / 60),
     externalMinutes: Math.round((week?.estimated_external_seconds ?? 0) / 60),
   };
-  return { user, courses, resume, time };
+  const { data: days } = await supabase.from("daily_activity").select("date, active_seconds").eq("user_id", user.id).gte("date", addDays(istDate(), -60));
+  const streakDays = streak((days ?? []).filter((d) => (d.active_seconds ?? 0) > 0).map((d) => d.date!), istDate());
+  return { user, courses, resume, time, streak: streakDays };
 }
 
 /** Monday of the current week in India time, as YYYY-MM-DD (matches the SQL views). */

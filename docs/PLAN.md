@@ -68,6 +68,17 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 5.5 | Email: Resend REST or log-only mode; receipt + invoice, refund + credit note | e2e (log mode) |
 | 5.6 | Admin: `/admin/payments` (filters, refund, CSV), `/admin/invoices` (regenerate, resend), `/admin/coupons`, `/admin/settings`; parent purchases + invoice downloads | e2e |
 
+## Milestone 6 — Dashboards, review queue, gallery
+
+| # | Task | Done when |
+|---|------|-----------|
+| 6.1 | Migration: `parent_student_links.gallery_consent`; admin report RPCs (`admin_overview`, `admin_students`, `admin_engagement`) guarded by `is_admin()`; `gallery_items()` (approved + student opt-in + parent consent, first name only) | SQL tests |
+| 6.2 | Charts: one reusable SVG daily column chart (active vs estimated external minutes) — validated palette, legend, tooltip on hover + focus, table view, light/dark | visual check |
+| 6.3 | Student: streak, badges (computed), `/learn/achievements`, `/learn/profile` (edit name, my gallery projects + withdraw) | unit + e2e |
+| 6.4 | Parent: children cards (progress, this week's time, consent status), child detail (courses, chart, submissions + feedback, gallery consent toggle) | e2e |
+| 6.5 | Admin: overview KPIs + daily active chart + top courses; students table + detail (per-course/lesson time, attempts, quiz scores, daily chart, events); engagement (date range, group by student/course/lesson, CSV); users (role management, audited) | e2e |
+| 6.6 | Review queue (`/studio/submissions`, also `/admin/submissions`): filters, signed previews, approve / needs revision + feedback; gallery page + moderation | e2e |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.

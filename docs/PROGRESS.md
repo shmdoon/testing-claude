@@ -117,3 +117,20 @@
 - Tests: 213 unit, 8 SQL suites, 28 offline E2E (landing, lead validation, campaign variants, attribution cookie, robots/sitemap/OG), live E2E for the lead funnel.
 
 **Next:** Milestone 6 — dashboards (student/parent/admin analytics, charts, CSV), `/admin/submissions` review queue, opt-in gallery.
+
+## Milestone 6 — Dashboards, review queue, gallery ✅ (2026-11-04)
+
+**Done**
+- Migration `…0700_dashboards` (applied to live): `parent_student_links.gallery_consent`, `admin_overview`, `admin_students`, `admin_engagement`, `gallery_items`.
+- Reusable accessible SVG daily chart (validated palette, light/dark, keyboard tooltips, table view) + stat tiles.
+- Student: learning streak on the dashboard; `/learn/achievements` (streak, totals, 14-day chart, 9 badges with progress); `/learn/profile` (edit name, approved projects with gallery share switch); `/learn/gallery`.
+- Parent: children cards (this week's active + estimated time, lessons done, streak, course progress, approval status); child detail (stat tiles, 30-day chart, courses, recent lessons with quiz scores, projects + teacher feedback, gallery consent switch, badges); `/parent/gallery`.
+- Admin: overview (active today/week, revenue this month excl. test, avg time per active student, review/leads/consent counts, 30-day active-students chart, top courses); students (search, time, last active, completion %) + detail (per-course, per-lesson time/attempts/quiz, 30-day chart, recent events, campaign source); engagement (presets + range, group by student/course/lesson, platform chart, CSV); users (role changes, audited).
+- Review queue `/studio/submissions` + `/admin/submissions` (status/course filters, link liveness, private previews, approve / needs revision with required feedback, gallery moderation).
+- Tests: 225 unit, 9 SQL suites (reports, permissions, gallery rules), 28 offline E2E, live E2E for student/teacher/parent/admin dashboards.
+
+**Known issues / notes**
+- Children appear for parents once linked; links are created by the consent flow (M7).
+- Admin tables cap at 100–200 rows per view (search/filters narrow); pagination later if needed.
+
+**Next:** Milestone 7 — parent consent flow (email + signed token, creates the parent link), data deletion requests, legal pages content structure, accessibility pass, Lighthouse pass on lesson pages.

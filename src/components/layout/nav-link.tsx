@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-type Props = { href: string; exact?: boolean; children: React.ReactNode };
+type Props = { href: string; exact?: boolean; match?: string[]; children: React.ReactNode };
 
 const base =
   "flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
@@ -22,9 +22,13 @@ export function NavLink(props: Props) {
   );
 }
 
-function ActiveNavLink({ href, exact, children }: Props) {
+function ActiveNavLink({ href, exact, match, children }: Props) {
   const pathname = usePathname();
-  const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  const active = match
+    ? pathname === href || match.some((m) => pathname === m || pathname.startsWith(`${m}/`))
+    : exact
+      ? pathname === href
+      : pathname === href || pathname.startsWith(`${href}/`);
   return (
     <Link
       href={href}
