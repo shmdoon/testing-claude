@@ -42,6 +42,11 @@
   --phase-reflection: var(--teal);
   --phase-module: var(--primary);
   --phase-check: var(--success);
+
+  /* Chart series (validated: dataviz validate_palette.js, light surface) */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-grid: oklch(0.92 0.01 250);
 }
 
 .dark {
@@ -69,6 +74,11 @@
   --warning: oklch(0.83 0.15 78);
   --warning-foreground: oklch(0.25 0.06 60);
   --destructive: oklch(0.68 0.19 25);
+
+  /* Chart series — dark steps validated against the dark surface */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-grid: oklch(0.3 0.02 265);
 }
 
 @theme inline {
@@ -99,6 +109,9 @@
   --color-phase-reflection: var(--phase-reflection);
   --color-phase-module: var(--phase-module);
   --color-phase-check: var(--phase-check);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-grid: var(--chart-grid);
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
