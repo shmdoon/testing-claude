@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Approve your child's account", robot
 export default function ConsentPage({ params }: PageProps<"/consent/[token]">) {
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
-      <Suspense fallback={<p>Loading…</p>}>
+      <Suspense fallback={<p className="min-h-svh">Loading…</p>}>
         <Consent params={params} />
       </Suspense>
     </div>

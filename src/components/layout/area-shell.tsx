@@ -74,7 +74,8 @@ async function AreaGate({ area, children }: { area: Area; children: React.ReactN
 
 export function PageSkeleton() {
   return (
-    <div className="space-y-4" aria-busy="true" aria-label={t("common.loading")}>
+    <div className="space-y-4" role="status" aria-busy="true">
+      <span className="sr-only">{t("common.loading")}</span>
       <div className="h-9 w-56 animate-pulse rounded-lg bg-muted" />
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="h-36 animate-pulse rounded-2xl bg-muted" />

@@ -120,7 +120,7 @@ export default async function LearnCoursePage({ params, searchParams }: PageProp
                         {body}
                       </Link>
                     ) : (
-                      <div className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-dashed bg-muted/40 p-3 opacity-80">{body}</div>
+                      <div className="flex min-h-16 items-center gap-3 rounded-2xl border-2 border-dashed bg-muted/40 p-3">{body}</div>
                     )}
                   </li>
                 );

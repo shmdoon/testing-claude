@@ -159,7 +159,7 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
                     className={cn(
                       "flex w-full min-w-16 flex-col items-center gap-1 rounded-xl p-2 text-xs font-semibold transition sm:text-sm",
                       current ? "bg-card shadow-sm ring-2 ring-primary" : "hover:bg-muted",
-                      !enterable && "cursor-not-allowed opacity-50",
+                      !enterable && "cursor-not-allowed text-muted-foreground",
                     )}
                   >
                     <span className={cn("h-2 w-full rounded-full", i <= idx || status === "completed" ? STEP_COLOR[s] : "bg-muted")} aria-hidden />

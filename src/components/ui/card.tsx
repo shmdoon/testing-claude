@@ -15,8 +15,9 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="card-header" className={cn("flex flex-col gap-1.5", className)} {...props} />;
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
-  return <h3 data-slot="card-title" className={cn("text-xl leading-tight font-bold", className)} {...props} />;
+/** Section heading inside a card. h2 by default (pages have one h1); pass `as="h3"` when nested under another h2. */
+function CardTitle({ className, as: Tag = "h2", ...props }: React.ComponentProps<"h2"> & { as?: "h2" | "h3" }) {
+  return <Tag data-slot="card-title" className={cn("text-xl leading-tight font-bold", className)} {...props} />;
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"p">) {

@@ -122,7 +122,7 @@ export function MatchPairsPlayer({ block }: P<"match_pairs">) {
                     </option>
                   ))}
                 </select>
-                {checked && chosen && <span aria-label={right ? t("player.correct") : t("player.notYet")}>{right ? "✅" : "🔁"}</span>}
+                {checked && chosen && <span role="img" aria-label={right ? t("player.correct") : t("player.notYet")}>{right ? "✅" : "🔁"}</span>}
               </div>
             </li>
           );
@@ -153,7 +153,7 @@ export function FillBlankPlayer({ block }: P<"fill_blank">) {
     <div className="space-y-4">
       {block.prompt && <Prompt>{block.prompt}</Prompt>}
       {block.word_bank && (
-        <div className="flex flex-wrap gap-2" aria-label={t("player.wordBank")}>
+        <div role="group" className="flex flex-wrap gap-2" aria-label={t("player.wordBank")}>
           {block.word_bank.map((w) => (
             <span key={w} className="rounded-full border-2 px-3 py-1 font-medium">
               {w}

@@ -23,7 +23,7 @@ export default async function EngagementPage({ searchParams }: PageProps<"/admin
       <PageHeader title="Engagement" description="Active time is measured on the platform; time on other websites is an estimate (launch → return, capped)." />
       {/* One filter row above everything it scopes; presets first. */}
       <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4">
-        <div className="flex flex-wrap gap-2" aria-label="Date presets">
+        <div role="group" className="flex flex-wrap gap-2" aria-label="Date presets">
           {[7, 30, 90].map((n) => (
             <Button key={n} asChild size="sm" variant={f.from === addDays(today, -(n - 1)) && f.to === today ? "secondary" : "outline"}>
               <Link href={`/admin/engagement?${qs({ from: addDays(today, -(n - 1)), to: today })}`}>Last {n} days</Link>

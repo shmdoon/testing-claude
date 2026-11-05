@@ -59,9 +59,9 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps<"/ad
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
-              {["Date", "Course", "Buyer", "Student", "Total", "Status", "Payment", "Documents", ""].map((h) => (
+              {["Date", "Course", "Buyer", "Student", "Total", "Status", "Payment", "Documents", "Actions"].map((h) => (
                 <th key={h} scope="col" className="p-3 font-semibold">
-                  {h}
+                  {h === "Actions" ? <span className="sr-only">{h}</span> : h}
                 </th>
               ))}
             </tr>

@@ -100,7 +100,8 @@ function FilterBar({ filters, subjects }: { filters: CatalogFilters; subjects: s
 
 function CatalogSkeleton() {
   return (
-    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label={t("common.loading")}>
+    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-busy="true">
+      <span className="sr-only">{t("common.loading")}</span>
       {[0, 1, 2].map((i) => (
         <div key={i} className="h-80 animate-pulse rounded-2xl bg-muted" />
       ))}

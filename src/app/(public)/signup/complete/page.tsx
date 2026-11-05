@@ -11,7 +11,7 @@ export const metadata = { title: "Finish setting up" };
 export default function CompleteProfilePage() {
   return (
     <AuthCard title={t("auth.completeTitle")} subtitle={t("auth.completeSubtitle")}>
-      <Suspense fallback={<p>{t("common.loading")}</p>}>
+      <Suspense fallback={<p className="min-h-svh">{t("common.loading")}</p>}>
         <Gate />
       </Suspense>
     </AuthCard>

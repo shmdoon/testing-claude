@@ -96,7 +96,7 @@ test("ask my parent to pay: WhatsApp payment link → parent pays without loggin
   await parent.getByLabel(/I am the student's parent or guardian/).check();
   await parent.getByRole("button", { name: "Pay ₹499" }).click();
   await parent.getByRole("button", { name: "Pay (test)" }).click();
-  await expect(parent.getByText("Paid — thank you! Ravi can start the course now.")).toBeVisible({ timeout: 20_000 });
+  await expect(parent.getByRole("heading", { name: "Paid — thank you! Ravi can start the course now." })).toBeVisible({ timeout: 20_000 });
   // Link can't be reused.
   await parent.goto(link);
   await expect(parent.getByText(/Paid — thank you/)).toBeVisible();

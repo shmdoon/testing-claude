@@ -15,12 +15,15 @@ import { t } from "@/i18n";
 export async function generateMetadata({ params }: PageProps<"/courses/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const course = await getCourseBySlug(slug);
-  return course ? { title: course.title, description: course.subtitle ?? undefined } : { title: "Course not found" };
+  if (!course) return { title: "Course not found" };
+  const description = course.subtitle || course.description?.slice(0, 160) || `${course.title} — a hands-on AI course for Class ${course.class_levels.join("–")} on AI Learning Hub.`;
+  return { title: course.title, description };
 }
 
 export default function CoursePage({ params }: PageProps<"/courses/[slug]">) {
   return (
-    <Suspense fallback={<div className="mx-auto h-96 max-w-6xl animate-pulse px-4 py-10" aria-busy="true" />}>
+    // Fallback fills the viewport so the footer doesn't jump when the course streams in (CLS).
+    <Suspense fallback={<div className="mx-auto min-h-svh max-w-6xl px-4 py-10" aria-busy="true" />}>
       <CourseDetail params={params} />
     </Suspense>
   );

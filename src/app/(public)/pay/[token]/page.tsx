@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Pay for a course", robots: { index: 
 export default function PayLinkPage({ params, searchParams }: PageProps<"/pay/[token]">) {
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
-      <Suspense fallback={<p>{t("common.loading")}</p>}>
+      <Suspense fallback={<p className="min-h-svh">{t("common.loading")}</p>}>
         <Pay params={params} searchParams={searchParams} />
       </Suspense>
     </div>
@@ -28,13 +28,14 @@ async function Pay({ params, searchParams }: { params: PageProps<"/pay/[token]">
     return (
       <Card className="items-center text-center" role="status">
         <CheckCircle2 className="size-12 text-success" aria-hidden />
-        <p className="text-xl font-bold">{sp.pending ? t("pay.pendingBanner") : t("pay.linkPaid", { child })}</p>
+        <h1 className="text-xl font-bold">{sp.pending ? t("pay.pendingBanner") : t("pay.linkPaid", { child })}</h1>
       </Card>
     );
   }
   if (!req || req.expired || req.status !== "open" || !req.courses || req.courses.is_free) {
     return (
       <Card>
+        <h1 className="text-2xl font-bold">{t("pay.linkExpiredTitle")}</h1>
         <p className="text-lg">{t("pay.linkExpired")}</p>
       </Card>
     );
