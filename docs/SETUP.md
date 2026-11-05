@@ -108,10 +108,32 @@ accountant. New invoices use the new values; issued ones never change.
 - **Before running ads:** replace the legal placeholders (privacy, terms, refund) — ad platforms check these pages —
   and mention cookies/ads measurement in the privacy policy.
 
-## 7. Tests
+## 7. Legal pages, privacy requests & daily clean-up
+
+- **Legal pages** (`/legal/privacy`, `/legal/terms`, `/legal/refund`) are drafts in `src/content/legal.ts`, written for
+  the DPDP Act 2023 and India's e-commerce rules. Business details come from **/admin/settings → Legal pages & privacy**
+  (grievance officer, privacy email, courts, last-updated date) plus the business name/address used on invoices.
+  A "Draft" banner shows until you set **Reviewed by a lawyer = Yes** *and* no value still looks like a placeholder.
+  **Have a lawyer review the text before launch** — in particular retention periods, the grievance timelines and liability.
+- **Data requests:** students use *Profile → Your data* (download JSON / request deletion). Parents ask on WhatsApp → an
+  admin adds it from the student page. Process them at **/admin/deletions** within 30 days. Accounts with purchases are
+  anonymised (invoices kept for GST); others are deleted completely.
+- **Daily clean-up:** schedule `GET https://<domain>/api/cron/cleanup` once a day with
+  `Authorization: Bearer <CRON_SECRET>`. It deletes accounts no parent approved within 30 days, old unpaid payment links
+  and stale rate-limit rows. Example `vercel.json`:
+  ```json
+  { "crons": [
+      { "path": "/api/cron/cleanup", "schedule": "30 21 * * *" },
+      { "path": "/api/cron/weekly-summary", "schedule": "30 12 * * 0" }
+  ] }
+  ```
+  (UTC: 03:00 IST daily, Sunday 18:00 IST.) Vercel sends `CRON_SECRET` as the bearer token automatically.
+
+## 8. Tests
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.
+- `tests/e2e/a11y.spec.ts` and `tests/e2e-live/a11y.spec.ts` run axe (WCAG 2.1 AA) on every page type in light and dark mode.
 - To try buying locally: sign in as an active student → course → "Pay now" (mock gateway).
 - `npm run test:e2e:live` runs signed-in flows (Studio, admin tools, catalogue) against the project in
   `.env.local`. It creates throwaway `@example.com` users/content via the secret key and deletes them afterwards.

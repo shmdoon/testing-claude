@@ -159,3 +159,27 @@ Supersedes the parent-account parts of M1, M5 and M6 above.
   child per 7-day window.
 - **W8 Gallery permission** is now `profiles.gallery_consent`, set by the parent on the consent page or by an
   admin on the student page (when the parent says yes on WhatsApp). Student opt-in per project still applies.
+
+## Data rights, legal pages, accessibility (Milestone 7)
+
+- **P1 Deletion is confirmed by an admin**, not instant. The requester is a child and deleting loses paid courses, so
+  an admin checks with the parent on WhatsApp and completes it within 30 days (DPDP s.12). The student can cancel while
+  pending. Requests can also come from the parent via an admin (note required, audited).
+- **P2 What "delete" means.** All learning data, uploads, messages, consents' contact details and the profile's personal
+  fields are removed. Orders and invoices are **kept** (GST law requires retention); for such accounts the login is
+  anonymised (`deleted-<id>@deleted.invalid`) and banned instead of deleted, and the profile is marked `deleted`.
+  Accounts without purchases are deleted outright. The `deletion_requests` row (no personal data) remains as the record.
+- **P3 Proof of consent is kept** (date, method, policy version) without the parent's phone/email, so we can show consent
+  was obtained without retaining contact data.
+- **P4 Data minimisation by default:** accounts never approved by a parent are erased after 30 days by a daily job
+  (`/api/cron/cleanup`). Safer for minors than keeping unconsented child data around.
+- **P5 Right to access:** a self-service JSON export (`/api/me/export`, rate-limited) rather than a manual email process.
+- **P6 Legal text** lives in code (`src/content/legal.ts`) as structured sections; business-specific values come from
+  settings so non-developers can complete them. Drafts are clearly flagged until a lawyer review is recorded.
+- **P7 Accessibility gate:** axe WCAG 2.1 A/AA + best-practice rules run in both colour schemes on public, student,
+  lesson-player (all seeded block types), consent, checkout, studio and admin pages; violations fail the build.
+  Fixes: success colour darkened (4.2 → ≥4.5:1), no opacity on locked lessons/badges, card titles are `h2` (heading
+  order), loading skeletons use `role="status"`, labelled groups get `role="group"`, empty table headers named.
+- **P8 Performance:** Suspense fallbacks on public pages reserve the viewport height so the footer doesn't jump
+  (course page CLS 0.19 → 0). Lighthouse "SEO" on signed-in pages is lower by design (`noindex`); on public pages a
+  missing meta description is reported only because Next streams metadata for non-crawler user agents — crawlers get it in `<head>`.

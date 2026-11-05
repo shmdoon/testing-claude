@@ -79,6 +79,18 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 6.5 | Admin: overview KPIs + daily active chart + top courses; students table + detail (per-course/lesson time, attempts, quiz scores, daily chart, events); engagement (date range, group by student/course/lesson, CSV); users (role management, audited) | e2e |
 | 6.6 | Review queue (`/studio/submissions`, also `/admin/submissions`): filters, signed previews, approve / needs revision + feedback; gallery page + moderation | e2e |
 
+## Milestone 7 — Data rights, legal pages, accessibility & performance
+
+| # | Task | Done when |
+|---|------|-----------|
+| 7.1 | Migration: `deletion_requests` (pending → completed/cancelled, survives erasure for audit), `account_status 'deleted'`, `erase_student()` (deletes learning data, consents, messages; anonymises the profile; keeps orders/invoices for tax law), legal settings (`legal.*`), RLS | SQL tests |
+| 7.2 | Student: "Delete my account" request + cancel on `/learn/profile`; "Download my data" (JSON); admin: create request on the parent's behalf (note required) | e2e |
+| 7.3 | Admin `/admin/deletions`: queue, confirm → erase (storage files, auth user deleted when no orders, else anonymised + banned), audited | e2e |
+| 7.4 | Daily `/api/cron/cleanup`: purge accounts still waiting for parent approval after 30 days, expired payment links/rate limits | unit + e2e |
+| 7.5 | Legal pages: structured drafts (privacy incl. children's data & rights, terms, refund) from `src/content/legal.ts`, business details filled from settings, version + "draft until reviewed" banner, admin settings for grievance officer | e2e |
+| 7.6 | Accessibility: axe checks (WCAG 2.1 AA) on public, learn, lesson-player, checkout, consent, admin pages; fix findings; keyboard pass on activities | 0 axe violations |
+| 7.7 | Lighthouse mobile on a lesson page + landing ≥ 85; fixes | scores recorded in PROGRESS |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.
@@ -94,5 +106,5 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
    - `/admin/submissions` review queue (filters: status, course, lesson, tool, date) with approve / needs-revision + feedback; approval completes the lesson step.
    - Opt-in gallery of approved projects (first name only, student + parent opt-in, revocable).
    - **Revised 2026-11-04:** no parent dashboard — parents are reached on WhatsApp (see DECISIONS W1–W8).
-7. **Consent + legal + polish** — ~~parent consent email~~ (done via WhatsApp link), data deletion request, legal pages, a11y + Lighthouse pass.
+7. **Consent + legal + polish** — done (see Milestone 7 table above).
 8. **Deployment docs** — `docs/DEPLOY.md` (Vercel Pro, Cloudflare/OpenNext), env, Razorpay live switch, backups.

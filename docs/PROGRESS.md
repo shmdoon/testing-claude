@@ -149,3 +149,19 @@
 **Needs from you:** WhatsApp Cloud API number + token and the 6 approved templates (SETUP §4), `LINK_SECRET`, `CRON_SECRET` + a weekly schedule. Until then everything works through the manual outbox.
 
 **Next:** Milestone 7 — data deletion requests, legal page content, accessibility + Lighthouse pass on lesson pages.
+
+## Milestone 7 — Data rights, legal pages, accessibility & performance ✅ (2026-11-05)
+
+**Done**
+- Migrations `…0900_data_rights`, `…0910_legal_jurisdiction` (applied to live): `deletion_requests`, `account_status 'deleted'`, `erase_student()`, legal settings.
+- Student *Profile → Your data*: download all my data (JSON), request deletion (confirm box, optional reason), cancel while pending; parent's WhatsApp number shown masked.
+- Admin: record a parent's request from the student page (note required); `/admin/deletions` queue → "Delete data now" (files, learning data, messages, contact details; invoices kept; login deleted or anonymised + banned); all audited.
+- Daily `/api/cron/cleanup`: erases accounts not approved by a parent within 30 days; removes stale payment links/rate limits.
+- Legal pages rewritten as structured drafts (privacy: children & consent, data list, WhatsApp, processors, retention, rights, grievance officer, security, cookies; terms; refund & cancellation), filled from settings, "Draft" banner until reviewed; signup links terms + privacy.
+- Accessibility: axe WCAG 2.1 AA checks (light + dark) on 11 public page types, every student page, all 8 seeded lessons, player steps after interaction, consent, checkout, studio and 14 admin pages — 0 violations. Keyboard-only lesson test (Tab reach, Enter, focus moves to the new step).
+- Lighthouse (mobile, production build): landing 97/100/100/100; course page 98–99 / 100 / 100 (CLS 0.19 → 0); lesson pages 91 / 100 / 100 (SEO n/a — signed-in pages are `noindex`); privacy policy 99/100/100/100.
+- Tests: 237 unit, 11 SQL suites, 74 offline E2E (incl. 44 axe), live E2E incl. privacy + a11y specs.
+
+**Needs from you:** fill *Admin → Settings → Legal pages & privacy* (grievance officer, privacy email, courts), business name/address, then a lawyer review of `src/content/legal.ts`; schedule `/api/cron/cleanup` daily (SETUP §7).
+
+**Next:** Milestone 8 — deployment docs (Vercel / Cloudflare OpenNext, env, cron, Razorpay + WhatsApp go-live, backups).
