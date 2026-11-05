@@ -23,6 +23,17 @@ export function SignupForm() {
       <StudentFields fieldErrors={fe} values={state.values} />
       <Field name="email" type="email" label={t("auth.studentEmail")} help={t("auth.studentEmailHelp")} autoComplete="email" error={fe.email} defaultValue={state.values?.email} />
       <FormError code={state.error} />
+      <p className="text-sm text-muted-foreground">
+        {t("auth.agreePrefix")}{" "}
+        <a href="/legal/terms" className="font-medium text-primary underline">
+          {t("legal.terms")}
+        </a>{" "}
+        {t("auth.agreeAnd")}{" "}
+        <a href="/legal/privacy" className="font-medium text-primary underline">
+          {t("legal.privacy")}
+        </a>
+        . {t("auth.agreeParent")}
+      </p>
       <SubmitButton>{t("auth.createAccount")}</SubmitButton>
     </form>
   );

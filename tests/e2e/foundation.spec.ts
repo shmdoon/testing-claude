@@ -66,12 +66,26 @@ test.describe("public pages", () => {
     for (const [path, title] of [
       ["/legal/privacy", "Privacy policy"],
       ["/legal/terms", "Terms of use"],
-      ["/legal/refund", "Refund policy"],
+      ["/legal/refund", "Refund and cancellation policy"],
       ["/courses", "Courses"],
     ]) {
       await page.goto(path);
       await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
     }
+  });
+
+  test("privacy policy covers children, rights and the grievance officer; drafts are flagged", async ({ page }) => {
+    await page.goto("/legal/privacy");
+    await expect(page.getByTestId("legal-draft")).toBeVisible();
+    for (const h of ["Children and parental consent", "Your rights", "Who we share data with", "How long we keep data"]) {
+      await expect(page.getByRole("heading", { level: 2, name: new RegExp(h) })).toBeVisible();
+    }
+    await expect(page.getByText(/Grievance Officer/).first()).toBeVisible();
+    await expect(page.locator("main")).not.toContainText("{{");
+    await page.getByRole("navigation", { name: "Sections" }).getByRole("link", { name: /Your rights/ }).click();
+    await expect(page).toHaveURL(/#rights$/);
+    await page.goto("/legal/refund");
+    await expect(page.locator("main")).toContainText("within 7 days");
   });
 
   test("dark mode toggle", async ({ page }) => {

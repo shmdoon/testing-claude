@@ -1,12 +1,13 @@
-import { t } from "@/i18n";
+import { Suspense } from "react";
+import { LegalPage } from "@/components/legal-page";
+import { REFUND } from "@/content/legal";
 
-export const metadata = { title: t("legal.refund") };
+export const metadata = { title: REFUND.title, description: "How refunds and cancellations work for AI Learning Hub courses." };
 
 export default function Page() {
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-4xl font-bold">{t("legal.refund")}</h1>
-      <p className="mt-4 rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">{t("legal.placeholder")}</p>
-    </article>
+    <Suspense fallback={<div className="mx-auto min-h-screen max-w-3xl px-4 py-12" aria-busy="true" />}>
+      <LegalPage doc={REFUND} />
+    </Suspense>
   );
 }

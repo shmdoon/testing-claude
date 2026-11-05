@@ -14,4 +14,10 @@ export const SETTING_RULES = {
   "invoice.credit_note_prefix": z.string().trim().regex(/^[A-Z]{2,5}$/, "2–5 capital letters"),
   "invoice.footer": z.string().trim().max(300),
   "refund.window_days": z.coerce.number().int().min(0).max(365),
+  "platform.support_email": z.union([z.literal(""), z.email()]),
+  "legal.grievance_officer": z.string().trim().min(1).max(120),
+  "legal.grievance_email": z.email(),
+  "legal.jurisdiction": z.string().trim().min(1).max(120),
+  "legal.last_updated": z.iso.date(),
+  "legal.reviewed": z.enum(["true", "false"]).transform((v) => v === "true"),
 } as const;

@@ -1,12 +1,13 @@
-import { t } from "@/i18n";
+import { Suspense } from "react";
+import { LegalPage } from "@/components/legal-page";
+import { PRIVACY } from "@/content/legal";
 
-export const metadata = { title: t("legal.privacy") };
+export const metadata = { title: PRIVACY.title, description: PRIVACY.summary[0] };
 
 export default function Page() {
   return (
-    <article className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-4xl font-bold">{t("legal.privacy")}</h1>
-      <p className="mt-4 rounded-2xl border-2 border-warning/60 bg-warning/15 p-4">{t("legal.placeholder")}</p>
-    </article>
+    <Suspense fallback={<div className="mx-auto min-h-screen max-w-3xl px-4 py-12" aria-busy="true" />}>
+      <LegalPage doc={PRIVACY} />
+    </Suspense>
   );
 }

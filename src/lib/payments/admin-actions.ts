@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { SETTINGS_TAG } from "@/lib/legal";
 import { z } from "zod";
 import { requireArea } from "@/lib/auth/dal";
 import { writeAudit } from "@/lib/audit";
@@ -132,6 +133,7 @@ export async function saveSettings(_prev: AdminState, form: FormData): Promise<A
     }
     if (changed.length) await writeAudit({ actorId: user.id, action: "settings.updated", targetType: "settings", metadata: { keys: changed } });
     revalidatePath("/admin/settings");
+    if (changed.length) updateTag(SETTINGS_TAG); // legal pages
     return { ok: true, message: changed.length ? `Saved (${changed.length} changed). New invoices use these values; issued invoices never change.` : "No changes." };
   });
 }

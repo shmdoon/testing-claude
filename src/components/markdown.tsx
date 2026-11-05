@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Safe Markdown: raw HTML is never rendered (react-markdown default), unsafe
- * URL schemes are stripped, external links open in a new tab.
+ * URL schemes are stripped, external links open in a new tab (site links don't).
  */
 export function Markdown({ children, className }: { children: string; className?: string }) {
   return (
@@ -16,11 +16,14 @@ export function Markdown({ children, className }: { children: string; className?
       <ReactMarkdown
         skipHtml
         components={{
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) =>
+            /^\/(?!\/)|^#/.test(href ?? "") ? (
+              <a href={href}>{children}</a>
+            ) : (
+              <a href={href} target="_blank" rel="noopener noreferrer">
+                {children}
+              </a>
+            ),
           img: () => null, // images go through the image block (alt text required)
         }}
       >
