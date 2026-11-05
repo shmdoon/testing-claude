@@ -72,5 +72,6 @@ export async function deleteUser(id: string) {
   if (files?.length) await admin.storage.from("submissions").remove(files.map((f) => `${id}/${f.name}`));
   await admin.from("audit_log").delete().eq("actor_id", id);
   const { error } = await admin.auth.admin.deleteUser(id);
-  if (error) throw new Error(`cleanup of ${id} failed: ${error.message}`);
+  if (error && !/not found/i.test(error.message)) throw new Error(`cleanup of ${id} failed: ${error.message}`);
+  await admin.from("deletion_requests").delete().eq("subject_id", id);
 }

@@ -39,7 +39,7 @@ export async function requireUser(nextPath?: string): Promise<CurrentUser> {
   if (!user) {
     redirect(nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login");
   }
-  if (user.profile.account_status === "suspended") redirect("/login?error=suspended");
+  if (user.profile.account_status === "suspended" || user.profile.account_status === "deleted") redirect("/login?error=suspended");
   return user;
 }
 

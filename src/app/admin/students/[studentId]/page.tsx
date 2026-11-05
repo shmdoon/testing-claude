@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getStudentStats } from "@/lib/learn/stats";
 import { waLink } from "@/lib/phone";
 import { AdminConsent, AdminGallery } from "@/components/dashboard/parent-contact";
+import { AdminRequestDeletion } from "@/components/dashboard/privacy-forms";
 
 export const metadata = { title: "Student" };
 
@@ -74,6 +75,7 @@ export default async function StudentDetail({ params }: PageProps<"/admin/studen
         </dl>
         {p.account_status === "pending_consent" && <AdminConsent studentId={studentId} />}
         <AdminGallery studentId={studentId} initial={p.gallery_consent} />
+        {p.account_status !== "deleted" && <AdminRequestDeletion studentId={studentId} />}
       </Card>
       <div className="grid gap-3 sm:grid-cols-4">
         <StatTile label="This week" value={formatDuration(stats.weekActiveSeconds)} sub={stats.weekExternalSeconds ? `+${formatDuration(stats.weekExternalSeconds)} est. elsewhere` : undefined} />

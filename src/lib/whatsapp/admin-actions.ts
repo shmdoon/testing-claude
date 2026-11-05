@@ -18,7 +18,7 @@ export async function markWhatsAppSent(id: string, status: "manual_sent" | "canc
     .update({ status, sent_at: status === "manual_sent" ? new Date().toISOString() : null, sent_by: user.id })
     .eq("id", id)
     .in("status", ["manual", "failed"]);
-  revalidatePath("/admin/whatsapp");
+  // No revalidate: the row stays in place showing "Marked as sent" so the list doesn't jump while working through it.
   return { ok: true };
 }
 

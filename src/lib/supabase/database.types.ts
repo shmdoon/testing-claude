@@ -454,6 +454,76 @@ export type Database = {
           },
         ]
       }
+      deletion_requests: {
+        Row: {
+          cancelled_at: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          note: string | null
+          outcome: Json | null
+          requested_by: string | null
+          source: string
+          status: Database["public"]["Enums"]["deletion_status"]
+          student_id: string | null
+          subject_id: string
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          outcome?: Json | null
+          requested_by?: string | null
+          source: string
+          status?: Database["public"]["Enums"]["deletion_status"]
+          student_id?: string | null
+          subject_id: string
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          outcome?: Json | null
+          requested_by?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["deletion_status"]
+          student_id?: string | null
+          subject_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deletion_requests_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deletion_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deletion_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_log: {
         Row: {
           created_at: string
@@ -1932,6 +2002,7 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      erase_student: { Args: { p_student: string }; Returns: Json }
       fulfill_order: {
         Args: {
           p_amount_paise: number
@@ -2045,11 +2116,13 @@ export type Database = {
         | "pending_consent"
         | "active"
         | "suspended"
+        | "deleted"
       app_role: "student" | "parent" | "content_editor" | "admin"
       consent_status: "pending" | "granted" | "withdrawn" | "expired"
       content_status: "draft" | "published" | "archived"
       coupon_kind: "percent" | "flat"
       course_type: "mini" | "big"
+      deletion_status: "pending" | "completed" | "cancelled"
       enrollment_source: "free" | "purchase" | "admin"
       enrollment_status: "active" | "revoked"
       invoice_kind: "invoice" | "credit_note"
@@ -2194,12 +2267,14 @@ export const Constants = {
         "pending_consent",
         "active",
         "suspended",
+        "deleted",
       ],
       app_role: ["student", "parent", "content_editor", "admin"],
       consent_status: ["pending", "granted", "withdrawn", "expired"],
       content_status: ["draft", "published", "archived"],
       coupon_kind: ["percent", "flat"],
       course_type: ["mini", "big"],
+      deletion_status: ["pending", "completed", "cancelled"],
       enrollment_source: ["free", "purchase", "admin"],
       enrollment_status: ["active", "revoked"],
       invoice_kind: ["invoice", "credit_note"],
