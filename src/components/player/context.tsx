@@ -12,6 +12,8 @@ export type PlayerCtx = {
   onSaved: (blockId: string, res: Extract<SubmitResult, { ok: true }>, response: unknown) => void;
   /** Re-fetch server data (e.g. after an external submission). */
   refresh: () => void;
+  /** Public playground: nothing is saved; responses are graded in the browser with the shared grader. */
+  demo?: boolean;
 };
 
 export const PlayerContext = createContext<PlayerCtx | null>(null);

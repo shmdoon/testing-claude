@@ -3,6 +3,7 @@
  * The interactive lesson-player renderers are added in Milestone 3 and are
  * registered alongside these in `registry.tsx`.
  */
+import { ARENAS } from "@/lib/sim/arena";
 import { CheckSquare, ExternalLink, GripVertical, ImageUp, Lightbulb, Info, TriangleAlert, Sparkles } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +163,31 @@ export function ChecklistTaskPreview({ block }: PreviewProps<"checklist_task">) 
           </Chip>
         ))}
       </ul>
+    </div>
+  );
+}
+
+const DIFFICULTY_LABEL = ["", "Easy", "Easy", "Medium", "Hard", "Hard"] as const;
+
+export function RobotSimPreview({ block }: PreviewProps<"robot_sim">) {
+  const arena = ARENAS[block.arena];
+  return (
+    <div className="space-y-3">
+      <Prompt>{block.title}</Prompt>
+      <Markdown>{block.goal}</Markdown>
+      <div className="flex flex-wrap gap-2 text-sm">
+        <span className="rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground">Arena: {arena.name}</span>
+        <span className="rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground">
+          {DIFFICULTY_LABEL[block.difficulty]} · level {block.difficulty}
+        </span>
+        <span className="rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground">
+          {block.mode === "demonstrate" ? "Teach by driving" : block.mode === "label" ? "Teach by labelling" : "Drive + label"}
+        </span>
+        <span className="rounded-full bg-secondary px-3 py-1 font-medium text-secondary-foreground">{block.learner === "knn" ? "Nearest-example model" : "Neural network"}</span>
+      </div>
+      <p className="rounded-xl border-2 border-dashed p-4 text-sm text-muted-foreground">
+        3D simulator renders here for students ({block.min_examples}+ examples, pass within {block.pass.max_seconds}s with at most {block.pass.max_bumps} bumps).
+      </p>
     </div>
   );
 }

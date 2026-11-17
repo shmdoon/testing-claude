@@ -11,8 +11,8 @@ import {
 const TOOL = "00000000-0000-4000-8000-000000009003";
 
 describe("block schemas", () => {
-  it("knows all 16 block types", () => {
-    expect(BLOCK_TYPES).toHaveLength(16);
+  it("knows all 17 block types", () => {
+    expect(BLOCK_TYPES).toHaveLength(17);
     expect(BLOCK_TYPES).toContain("external_task");
   });
 

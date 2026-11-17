@@ -12,6 +12,7 @@
 import { z } from "zod";
 
 import { PHASES, type Phase } from "./phases.ts";
+import { ARENA_IDS } from "../../lib/sim/arena.ts";
 
 export { PHASES, type Phase };
 
@@ -146,6 +147,33 @@ export const embedSimBlock = base("embed_sim", ["activity", "module"]).extend({
   }),
   instructions: markdown(2000).optional(),
   height: z.number().int().min(240).max(900).default(480),
+});
+
+export const SIM_MODES = ["demonstrate", "label", "both"] as const;
+export const SIM_LEARNERS = ["knn", "mlp"] as const;
+
+/** Physical-AI project: the student supervises a rover model in a 3D simulator (see docs/DECISIONS.md P-AI). */
+export const robotSimBlock = base("robot_sim", ["activity"]).extend({
+  title: text(120),
+  /** The mission, in markdown. */
+  goal: markdown(2000),
+  arena: z.enum(ARENA_IDS),
+  /** 1 = easiest … 5 = hardest; drives the project ladder order. */
+  difficulty: z.number().int().min(1).max(5),
+  /** How examples are collected: drive the rover, label situations, or both. */
+  mode: z.enum(SIM_MODES).default("demonstrate"),
+  learner: z.enum(SIM_LEARNERS).default("knn"),
+  /** Examples needed before "Train" unlocks. */
+  min_examples: z.number().int().min(5).max(2000).default(30),
+  /** Std-dev of sensor noise, 0 = perfect sensors. */
+  sensor_noise: z.number().min(0).max(0.3).default(0),
+  pass: z
+    .object({
+      max_seconds: z.number().int().min(5).max(300).default(60),
+      max_bumps: z.number().int().min(0).max(20).default(0),
+    })
+    .default({ max_seconds: 60, max_bumps: 0 }),
+  hints: z.array(text(200)).max(5).default([]),
 });
 
 export const uploadWorkBlock = base("upload_work", ["activity"]).extend({
@@ -291,6 +319,7 @@ export const blockSchema = z.discriminatedUnion("type", [
   uploadWorkBlock,
   checklistTaskBlock,
   externalTaskBlock,
+  robotSimBlock,
   reflectionPromptBlock,
   richTextBlock,
   videoBlock,
@@ -316,6 +345,7 @@ export const ACTIVITY_TYPES = [
   "upload_work",
   "checklist_task",
   "external_task",
+  "robot_sim",
 ] as const satisfies readonly BlockType[];
 
 export function allowedPhases(type: BlockType): readonly Phase[] {

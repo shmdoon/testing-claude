@@ -22,6 +22,7 @@ import {
 import { ExternalTaskPlayer } from "./external-task-player";
 import { QuizPlayer } from "./quiz-player";
 import { UploadWorkPlayer } from "./upload-player";
+import { RobotSimPlayer } from "./robot-sim/robot-sim-player";
 import { BlockErrorBoundary } from "./block-boundary";
 import { TrackedVideo } from "./tracked-video";
 
@@ -44,6 +45,7 @@ export const playerRegistry: PlayerRegistry = {
   upload_work: UploadWorkPlayer,
   checklist_task: ChecklistTaskPlayer,
   external_task: ExternalTaskPlayer,
+  robot_sim: RobotSimPlayer,
   reflection_prompt: ReflectionPromptPlayer,
   rich_text: display(Preview.RichTextPreview),
   video: ({ block }) => (
@@ -75,6 +77,7 @@ export const INTERACTIVE_TYPES: ReadonlySet<BlockType> = new Set([
   "upload_work",
   "checklist_task",
   "external_task",
+  "robot_sim",
   "reflection_prompt",
   "quiz",
 ]);

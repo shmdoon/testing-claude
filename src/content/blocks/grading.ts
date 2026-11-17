@@ -18,6 +18,14 @@ export const responseSchemas = {
   predict_then_reveal: z.object({ prediction: z.string().trim().min(1).max(500) }),
   multiple_choice_explore: z.object({ explored: ids.min(1) }),
   embed_sim: z.object({ done: z.literal(true) }),
+  robot_sim: z.object({
+    examples: z.number().int().min(0).max(5000),
+    accuracy: z.number().min(0).max(1).nullable(),
+    runs: z.number().int().min(1).max(1000),
+    success: z.boolean(),
+    seconds: z.number().min(0).max(600).nullable(),
+    bumps: z.number().int().min(0).max(1000),
+  }),
   checklist_task: z.object({ checked: ids }),
   reflection_prompt: z.object({ text: z.string().trim().max(2000) }),
   quiz: z.object({ answers: z.record(z.string().max(40), z.union([z.string().max(200), z.boolean()])) }),
@@ -92,6 +100,22 @@ export function gradeBlock(block: Block, rawResponse: unknown): { ok: true; resu
     }
     case "embed_sim":
       return { ok: true, response: r, result: { score: null, completed: true } };
+    case "robot_sim": {
+      // The run happens in the browser (like other simulations); the server
+      // keeps the record and decides what "passed" means from the block's rule.
+      const x = r as ResponseOf<"robot_sim">;
+      const passed = x.success && x.bumps <= block.pass.max_bumps && (x.seconds ?? Infinity) <= block.pass.max_seconds;
+      const feedback = passed
+        ? undefined
+        : !x.success
+          ? x.examples < block.min_examples
+            ? `The rover needs more examples — at least ${block.min_examples}.`
+            : "Teach it what to do in the situation where it got stuck, then train again."
+          : x.bumps > block.pass.max_bumps
+            ? `It reached the flag but bumped ${x.bumps} times (allowed: ${block.pass.max_bumps}). Add examples near walls.`
+            : `It reached the flag but took ${x.seconds}s (allowed: ${block.pass.max_seconds}s). Fewer wobbles — add straight-driving examples.`;
+      return { ok: true, response: x, result: { score: passed ? 100 : null, completed: passed, feedback } };
+    }
     case "checklist_task": {
       const { checked } = r as ResponseOf<"checklist_task">;
       const valid = checked.filter((id) => block.steps.some((s) => s.id === id));
