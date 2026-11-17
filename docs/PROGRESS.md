@@ -165,3 +165,18 @@
 **Needs from you:** fill *Admin → Settings → Legal pages & privacy* (grievance officer, privacy email, courts), business name/address, then a lawyer review of `src/content/legal.ts`; schedule `/api/cron/cleanup` daily (SETUP §7).
 
 **Next:** Milestone 8 — deployment docs (Vercel / Cloudflare OpenNext, env, cron, Razorpay + WhatsApp go-live, backups).
+
+## Milestone 9 — Physical AI simulator, project ladder, motion & sound ✅ code complete (2026-11-17)
+
+**Done**
+- `src/lib/sim`: arenas (6 presets), rover physics with sliding collisions, sensors, seeded noise, episode runner; k-NN + MLP learners with held-out accuracy (23 unit tests incl. "trained from demonstrations drives every arena").
+- `robot_sim` block (schema, grading rule, registry, Studio preview); 3D player (Three.js follow/top camera, sensor rays, trail, minimap fallback), Teach/Label/Train/Test flow, keyboard + touch controls, telemetry, examples kept across reloads.
+- "Physical AI Lab" course: 6 projects easy → hard (open field, wall, line + first neural net, labelling, maze, noisy delivery), each with the idea behind it and a quick check; `/learn/projects` ladder with difficulty, status, best time, next up.
+- Public `/playground` (3 challenges, no account) linked from the landing hero + sitemap.
+- Motion utilities + confetti; synthesised sounds with a mute toggle in every header.
+- Tests: 265 unit; offline E2E incl. playground drive → train → autonomous pass and the sound toggle; live E2E spec for the lesson + ladder (`tests/e2e-live/robot-sim.spec.ts`).
+- Lighthouse (mobile, production build): `/playground` 98 / 100 / 100 / 100 — the Three.js bundle loads only after "Start the rover", so lesson pages stay light; landing 100 / 100 / 100 / 100.
+
+**Blocked on the Supabase project (paused?):** the seed with the new course could not be applied (host unreachable; Management API says "database not accessible"), and the live suite could not run. Run `npm run db:seed` and `npm run test:e2e:live` once the project is restored.
+
+**Next:** Milestone 8 — deployment docs.

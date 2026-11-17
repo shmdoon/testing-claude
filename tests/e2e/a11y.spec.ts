@@ -5,6 +5,7 @@ const PAGES = [
   "/",
   "/lp/ai-for-kids",
   "/courses",
+  "/playground",
   "/login",
   "/signup",
   "/legal/privacy",

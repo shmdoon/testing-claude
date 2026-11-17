@@ -18,6 +18,8 @@ const LESSONS = [
   "ai-explorers/neural-network-playground",
   "ai-explorers/train-it-offline",
   "ai-explorers/publish-your-page",
+  "physical-ai/drive-to-the-flag",
+  "physical-ai/teach-by-labelling",
 ];
 
 test.beforeAll(async () => {
@@ -26,7 +28,7 @@ test.beforeAll(async () => {
   editor = await createUser("content_editor");
   adminUser = await createUser("admin");
   await admin.from("profiles").update({ account_status: "active" }).eq("id", kid.id);
-  const { data: courses } = await admin.from("courses").select("id, slug").in("slug", ["what-is-ai", "ai-explorers"]);
+  const { data: courses } = await admin.from("courses").select("id, slug").in("slug", ["what-is-ai", "ai-explorers", "physical-ai"]);
   for (const c of courses ?? []) await admin.from("enrollments").insert({ user_id: kid.id, course_id: c.id, source: "admin" });
 });
 test.afterAll(async () => {
@@ -37,7 +39,7 @@ for (const scheme of ["light", "dark"] as const) {
   test(`student area + every lesson's first activity (${scheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await signIn(page, kid.email);
-    for (const path of ["/learn", "/learn/what-is-ai", "/learn/ai-explorers", "/learn/achievements", "/learn/profile", "/learn/purchases", "/learn/gallery"]) {
+    for (const path of ["/learn", "/learn/what-is-ai", "/learn/ai-explorers", "/learn/projects", "/learn/achievements", "/learn/profile", "/learn/purchases", "/learn/gallery"]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       await expectNoA11yViolations(page);

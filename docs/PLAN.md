@@ -91,6 +91,19 @@ the rest. Decisions live in `docs/DECISIONS.md`, status in `docs/PROGRESS.md`.
 | 7.6 | Accessibility: axe checks (WCAG 2.1 AA) on public, learn, lesson-player, checkout, consent, admin pages; fix findings; keyboard pass on activities | 0 axe violations |
 | 7.7 | Lighthouse mobile on a lesson page + landing ≥ 85; fixes | scores recorded in PROGRESS |
 
+## Milestone 9 — Physical AI simulator, project ladder, motion & sound (requested 2026-11-17)
+
+| # | Task | Done when |
+|---|------|-----------|
+| 9.1 | Pure simulation core `src/lib/sim`: arenas (presets), differential-drive rover physics, sensors (3 distance rays, line offset, goal bearing), seeded noise, episode runner | unit tests |
+| 9.2 | In-browser supervised learners: k-NN (instant) and a tiny MLP (softmax, SGD, epochs with loss) with held-out accuracy | unit tests: learn "turn away from wall" from examples |
+| 9.3 | `robot_sim` block: schema (arena, difficulty 1–5, mode demonstrate/label/both, min examples, pass rule, noise, learner), grading (completed on a successful autonomous run), registry + Studio preview | schema + registry tests |
+| 9.4 | 3D player (Three.js, loaded only on sim lessons): follow camera, rover, walls, goal, sensor rays, line track; Teach (drive, record), Label (snapshots), Train (accuracy, loss), Test (let it drive) tabs; keyboard + touch controls; telemetry | live e2e: train by demonstration → autonomous success |
+| 9.5 | "Physical AI Lab" course: 6 projects sorted easy → hard (open field → wall → line → labelling → maze → noisy delivery), each explaining the supervised-learning idea; `/learn/projects` ladder page (difficulty, status, best time, next up) | seed applied to live |
+| 9.6 | Motion: card lift, button press, checkbox pop, feedback pop-in, step transitions, confetti on lesson/project success — all under `prefers-reduced-motion` | axe + Lighthouse unchanged |
+| 9.7 | Sound: Web Audio synthesised cues (tap, record tick, train, success, error, level-up), mute toggle in every header (remembered), never before a user gesture | unit test for the mute store; e2e for the toggle |
+| 9.8 | Docs: DECISIONS (sim design, learners, why 3D stays light), PROGRESS, SETUP | — |
+
 ## Later milestones (outline — detailed when started)
 
 2. **Content model + Studio** — content tables + versioning, Zod block schemas & registry, Studio CRUD with reorder, seed 2 courses using every block type.

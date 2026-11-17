@@ -183,3 +183,30 @@ Supersedes the parent-account parts of M1, M5 and M6 above.
 - **P8 Performance:** Suspense fallbacks on public pages reserve the viewport height so the footer doesn't jump
   (course page CLS 0.19 → 0). Lighthouse "SEO" on signed-in pages is lower by design (`noindex`); on public pages a
   missing meta description is reported only because Next streams metadata for non-crawler user agents — crawlers get it in `<head>`.
+
+## Physical AI simulator, project ladder, motion & sound (Milestone 9, 2026-11-17)
+
+- **P-AI1 Simulator in the browser, physics in pure TypeScript.** `src/lib/sim` (arena presets, differential-drive
+  rover, 3 distance rays + line sensor + flag bearing, seeded noise, episode runner) has no DOM or Three.js
+  dependency, so the same code runs in the lesson, in the autonomous test and in unit tests. Walls *slide* the
+  rover (bumper-car style) and a "bump" is counted when contact starts — a stuck rover is a dead end for a child.
+- **P-AI2 Supervised learning the student can feel.** Two learners, both in-browser: k-NN ("copy the most similar
+  example") for the first projects, and a one-hidden-layer MLP (softmax, SGD) later, whose loss curve is drawn
+  while it trains. Held-out accuracy (20 %) is reported so "99 % on my own examples" doesn't mislead. A model
+  trained only from the reference driver's demonstrations reaches the flag in all six arenas (unit test).
+- **P-AI3 Three.js stays light.** `three` core only (no controls/loaders), imported through `next/dynamic` on
+  rover lessons alone; pixel ratio capped at 1.5, rendering paused off-screen/hidden tab, `low-power` GPU hint.
+  If WebGL is unavailable the SVG minimap takes over, so the project is still playable.
+- **P-AI4 The browser reports the run, the server decides pass/fail.** As with other simulations, the run can't
+  be re-executed server-side; the response (examples, held-out accuracy, seconds, bumps, success) is validated and
+  the block's pass rule applied in `gradeBlock`. Attempts are counted; best time feeds the ladder.
+- **P-AI5 Project ladder = sorted lessons.** No new tables: `/learn/projects` reads published lessons containing a
+  `robot_sim` block and sorts by its `difficulty`; lock/unlock follows enrolment exactly like the course page.
+- **P-AI6 Public playground.** `/playground` runs the same player with `demo: true` — the shared grader runs in
+  the browser and nothing is stored. It doubles as marketing and as the offline E2E harness for the simulator.
+- **M-S1 Sound is synthesised, opt-out, gesture-gated.** Web Audio tones (no files, no network): a document-level
+  click listener gives buttons/links/checkboxes a soft tap; feedback, bumps, training and passing have their
+  own cues; a header toggle mutes everything (remembered in localStorage). Nothing plays before a user gesture.
+- **M-S2 Motion only under `prefers-reduced-motion: no-preference`.** Card lift, press, pop-in, step fade, checkbox
+  pop, confetti on lesson/project completion. Camera follow in the simulator is kept (it's informational), but
+  snaps instead of easing when motion is reduced. Visual theme otherwise unchanged (user decision).

@@ -129,7 +129,15 @@ accountant. New invoices use the new values; issued ones never change.
   ```
   (UTC: 03:00 IST daily, Sunday 18:00 IST.) Vercel sends `CRON_SECRET` as the bearer token automatically.
 
-## 8. Tests
+## 8. Physical AI simulator
+
+- Projects live in the "Physical AI Lab" course (seed). A project is any lesson with a **Rover project** block; its
+  `difficulty` (1–5) orders `/learn/projects`. Add projects in Studio with the block's JSON (arena, mode, learner,
+  min_examples, sensor_noise, pass rule, hints) — no code change needed.
+- `/playground` is a public, no-login demo of the same simulator (nothing is saved). Link it from ads.
+- Sounds are synthesised in the browser; nothing to configure. The header speaker icon mutes them per device.
+
+## 9. Tests
 
 - `npm run test:db` needs PostgreSQL 15+ binaries locally (`initdb`, `pg_ctl`, `psql`) **or** a `DATABASE_URL`.
 - `npx playwright install chromium` once before `npm run test:e2e`.
