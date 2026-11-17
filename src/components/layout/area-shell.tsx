@@ -3,6 +3,7 @@ import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { UserMenu, UserMenuFallback } from "./user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SoundToggle } from "@/components/sound-effects";
 import { Badge } from "@/components/ui/badge";
 import { requireArea } from "@/lib/auth/dal";
 import { PROTECTED_PREFIXES, type Area } from "@/lib/auth/roles";
@@ -37,7 +38,9 @@ export function AreaShell({
             </Badge>
           </div>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
+            <SoundToggle />
+            <SoundToggle />
+          <ThemeToggle />
             <Suspense fallback={<UserMenuFallback />}>
               <UserMenu showDashboardLink={false} />
             </Suspense>

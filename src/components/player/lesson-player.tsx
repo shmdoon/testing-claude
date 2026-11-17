@@ -13,6 +13,8 @@ import { PlayerContext, type PlayerCtx } from "./context";
 import { useActivityTracker } from "@/hooks/use-activity-tracker";
 import { BlockPlayer, INTERACTIVE_TYPES } from "./registry";
 import { t } from "@/i18n";
+import { play } from "@/lib/sound/sound";
+import { Confetti } from "@/components/confetti";
 
 type Data = Extract<PlayerData, { kind: "ok" }>;
 type Step = Phase | "done";
@@ -40,6 +42,7 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
   const [synced, setSynced] = useState(props);
   const [responses, setResponses] = useState(props.responses);
   const [status, setStatus] = useState(props.progress.status);
+  const [burst, setBurst] = useState(0);
   const [activityAttempted, setActivityAttempted] = useState(props.progress.activity_attempted);
   if (props !== synced) {
     setSynced(props);
@@ -105,6 +108,7 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
 
   function go(target: Step) {
     if (!canEnter(target)) return;
+    if (target !== step) play("whoosh");
     setStep(target);
     if (status !== "completed") void setPhase(lesson.id, target);
   }
@@ -124,6 +128,10 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
           result: res.result,
         },
       }));
+      if (res.lessonStatus === "completed" && status !== "completed") {
+        play("levelup");
+        setBurst((b) => b + 1);
+      }
       setStatus(res.lessonStatus);
       if (res.activityAttempted) setActivityAttempted(true);
     },
@@ -144,6 +152,7 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
   return (
     <PlayerContext value={ctx}>
       <div className="space-y-6">
+        <Confetti burst={burst} />
         <nav aria-label={t("player.steps")}>
           <ol className="flex gap-1 overflow-x-auto pb-1 sm:gap-2">
             {steps.map((s, i) => {
@@ -176,7 +185,7 @@ export function LessonPlayer(props: Omit<Data, "kind" | "user">) {
 
         {props.newerVersionAvailable && <p className="rounded-xl bg-muted p-3 text-sm">{t("player.olderVersion")}</p>}
 
-        <section aria-labelledby="phase-h" className="space-y-6">
+        <section key={step} aria-labelledby="phase-h" className="animate-fade-up space-y-6">
           <h2 id="phase-h" ref={heading} tabIndex={-1} className="text-2xl font-bold outline-none sm:text-3xl">
             {t(`player.heading_${step}` as never)}
           </h2>

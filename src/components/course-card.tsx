@@ -33,7 +33,7 @@ export function CourseCard({ course }: { course: CatalogCourse }) {
   return (
     <Link
       href={`/courses/${course.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="group lift flex h-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <CourseCover path={course.cover_image_path} />
       <div className="flex flex-1 flex-col gap-2 p-5">

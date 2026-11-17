@@ -115,7 +115,7 @@ export default async function LearnCoursePage({ params, searchParams }: PageProp
                     {l.open ? (
                       <Link
                         href={`/learn/${course.slug}/${l.slug}`}
-                        className="flex min-h-16 items-center gap-3 rounded-2xl border-2 bg-card p-3 transition hover:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                        className="lift flex min-h-16 items-center gap-3 rounded-2xl border-2 bg-card p-3 hover:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         {body}
                       </Link>

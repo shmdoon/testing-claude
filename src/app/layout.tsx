@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
+import { Suspense } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SoundEffects } from "@/components/sound-effects";
 import { t } from "@/i18n";
 import "./globals.css";
 
@@ -43,6 +45,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {t("common.skipToContent")}
         </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <Suspense fallback={null}>
+            <SoundEffects />
+          </Suspense>
           {children}
         </ThemeProvider>
       </body>

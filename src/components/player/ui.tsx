@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { CheckCircle2, CircleAlert } from "lucide-react";
+import { play } from "@/lib/sound/sound";
 import { cn } from "@/lib/utils";
 
 export function Prompt({ children }: { children: React.ReactNode }) {
@@ -9,11 +11,15 @@ export function Prompt({ children }: { children: React.ReactNode }) {
 
 export function Feedback({ tone, children }: { tone: "good" | "try" | "info"; children: React.ReactNode }) {
   const Icon = tone === "good" ? CheckCircle2 : CircleAlert;
+  useEffect(() => {
+    if (tone === "good") play("success");
+    else if (tone === "try") play("error");
+  }, [tone]);
   return (
     <div
       role="status"
       className={cn(
-        "flex gap-3 rounded-xl border-2 p-3",
+        "animate-pop-in flex gap-3 rounded-xl border-2 p-3",
         tone === "good" && "border-success/50 bg-success/10",
         tone === "try" && "border-warning/60 bg-warning/15",
         tone === "info" && "border-primary/40 bg-primary/10",

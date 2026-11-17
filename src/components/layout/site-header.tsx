@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Logo } from "./logo";
 import { UserMenu, UserMenuFallback } from "./user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SoundToggle } from "@/components/sound-effects";
 import { t } from "@/i18n";
 
 export function SiteHeader() {
@@ -25,6 +26,7 @@ export function SiteHeader() {
           </Link>
         </nav>
         <div className="flex items-center gap-1">
+          <SoundToggle />
           <ThemeToggle />
           <Suspense fallback={<UserMenuFallback />}>
             <UserMenu />
