@@ -541,4 +541,327 @@ const aiExplorers: SeedCourse = {
   ],
 };
 
-export const courses: SeedCourse[] = [whatIsAi, aiExplorers];
+// ---------------------------------------------------------------------------
+// Course 3 — Physical AI Lab: a ladder of rover projects, easy → hard.
+// Each project = a robot_sim block (the student supervises a model in a 3D
+// simulator) + the idea behind it + a quick check.
+// ---------------------------------------------------------------------------
+const sim = (
+  id: string,
+  props: Omit<Extract<Block, { type: "robot_sim" }>, "id" | "type" | "phase">,
+): Extract<Block, { type: "robot_sim" }> => ({ id, type: "robot_sim", phase: "activity", ...props });
+
+const physicalAi: SeedCourse = {
+  id: u(3),
+  slug: "physical-ai",
+  title: "Physical AI Lab",
+  subtitle: "Six rover projects, easy to hard: teach a robot by example, train a model, watch it drive itself.",
+  description:
+    "Physical AI is AI that moves in the real world — robots, rovers, drones. In this lab you are the supervisor: you show a rover what to do, a model learns from your examples, and then it has to drive on its own in a 3D simulator. Projects get harder step by step.",
+  outcomes: [
+    "Explain supervised learning: examples in, a model out",
+    "Collect good training data by driving and by labelling",
+    "Read a robot's sensors and predict what it will do",
+    "Train a nearest-example model and a small neural network",
+    "Diagnose a robot that fails: not enough data, contradictions, noise",
+  ],
+  course_type: "big",
+  class_levels: [7, 8],
+  subject: "ai",
+  is_free: false,
+  price_paise: 79900,
+  cover_image_path: "/seed/physical-ai.svg",
+  modules: [
+    {
+      id: u(301),
+      title: "Level 1 · Teach by driving",
+      description: "Your driving becomes the robot's training data.",
+      lessons: [
+        {
+          id: u(3001),
+          version_id: u(7001),
+          slug: "drive-to-the-flag",
+          title: "Project 1 · Drive to the flag",
+          summary: "Easy. Open field, no walls. Show the rover the way, then let it go alone.",
+          estimated_minutes: 15,
+          is_preview: true,
+          blocks: [
+            sim("rover", {
+              title: "Drive to the flag",
+              goal: "Drive the rover to the green flag **a few times**. Then train the model and press *Let it drive*. If it reaches the flag on its own within 30 seconds, you pass.",
+              arena: "open-field",
+              difficulty: 1,
+              mode: "demonstrate",
+              learner: "knn",
+              min_examples: 20,
+              sensor_noise: 0,
+              pass: { max_seconds: 30, max_bumps: 0 },
+              hints: ["Drive smoothly — jerky driving gives the model mixed messages.", "Reset and drive to the flag two or three times from the start."],
+            }),
+            reflect("notice", "When the rover drove alone, did it do anything you didn't teach it? Why do you think that happened?"),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## You were the supervisor\n\nEvery tenth of a second you drove, the simulator wrote down one **example**: what the sensors saw (*input*) and what you did (*output*).\n\nTraining a **supervised model** means giving it lots of these input→output pairs. It never saw the flag — only numbers like *how far is the flag to the left* — and it learned to copy your choices.\n\nThis is how real self-driving systems started: humans drove, cameras and sensors recorded, and a model learned to imitate. It's called **learning from demonstration**.",
+            },
+            { id: "points", type: "key_points", phase: "module", title: "Key points", points: ["Input = sensor readings, output = your action", "A model copies the pattern in your examples", "More good examples → a better rover"] },
+            quickQuiz("check", [
+              {
+                kind: "mcq",
+                id: "q1",
+                prompt: "What did the model learn from?",
+                options: [
+                  { id: "a", text: "A map of the arena" },
+                  { id: "b", text: "Your examples: sensors in, action out" },
+                  { id: "c", text: "Rules someone typed in" },
+                ],
+                correct_option_id: "b",
+                explanation: "The model only ever saw your examples — sensor numbers paired with the action you chose.",
+              },
+              { kind: "true_false", id: "q2", statement: "The rover can only do things that appeared in your examples.", answer: true, explanation: "It copies patterns from the examples. New situations that look like nothing it has seen confuse it." },
+            ]),
+          ],
+        },
+        {
+          id: u(3002),
+          version_id: u(7002),
+          slug: "around-the-wall",
+          title: "Project 2 · Around the wall",
+          summary: "Easy. A wall blocks the straight path. Teach the turn, not just the straight bit.",
+          estimated_minutes: 20,
+          blocks: [
+            sim("rover", {
+              title: "Around the wall",
+              goal: "There's a wall between the rover and the flag. Drive around it **several times, both ways**. Watch the front ray turn red as you get close — that's what the model will use to decide when to turn.",
+              arena: "wall-ahead",
+              difficulty: 2,
+              mode: "demonstrate",
+              learner: "knn",
+              min_examples: 40,
+              sensor_noise: 0,
+              pass: { max_seconds: 40, max_bumps: 3 },
+              hints: ["Start turning when the front ray goes orange, not when it's red.", "Go around on the left some runs and on the right in others, so the model learns both.", "After a failed test, teach it in exactly the spot where it got stuck."],
+            }),
+            reflect("notice", "Which sensor changes most just before you turn? How could the rover use it?"),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## Sensors are all the robot has\n\nThe rover has three **distance rays** (left, front, right) and knows which way the flag is. It cannot see the wall — it only sees *front ray = 0.3*. If your examples always turned at the last moment, the model learned \"turn only when the front ray is tiny\" and slams into the wall first.\n\n**Good training data covers the tricky moments**, not just the easy straight parts. Engineers call this *coverage*.",
+            },
+            quickQuiz("check", [
+              {
+                kind: "mcq",
+                id: "q1",
+                prompt: "The rover keeps bumping the wall. The most likely fix is:",
+                options: [
+                  { id: "a", text: "Drive faster" },
+                  { id: "b", text: "Give more examples of turning early near the wall" },
+                  { id: "c", text: "Delete all the examples where you turned" },
+                ],
+                correct_option_id: "b",
+                explanation: "The model needs examples of the moment to turn. Missing situations can't be learned.",
+              },
+            ]),
+          ],
+        },
+        {
+          id: u(3003),
+          version_id: u(7003),
+          slug: "follow-the-line",
+          title: "Project 3 · Follow the line",
+          summary: "Medium. A painted line with two bends, and your first neural network.",
+          estimated_minutes: 25,
+          blocks: [
+            sim("rover", {
+              title: "Follow the line",
+              goal: "Keep the rover on the line all the way to the flag. The **line sensor** tells it whether the line is to the left or right. This project trains a small **neural network** — watch its error fall as it learns.",
+              arena: "line-track",
+              difficulty: 3,
+              mode: "demonstrate",
+              learner: "mlp",
+              min_examples: 60,
+              sensor_noise: 0,
+              pass: { max_seconds: 60, max_bumps: 2 },
+              hints: ["Small corrections: tap left/right briefly to stay centred.", "Train, test, then teach more on the bend where it drifted."],
+            }),
+            reflect("notice", "What did the training error (loss) curve look like? What do you think it means when it stops falling?"),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## A neural network finds the rule\n\nThe first two projects used a **nearest-example** model: it searched your examples for the most similar one and copied it.\n\nA **neural network** is different. It starts with random numbers (weights) and in each training round nudges them so its answers match your examples a little better. The **loss** is its average error — when it stops falling, the network has found the best rule it can from your data.\n\nThe network never stores your examples. It stores a *rule*, which is why it can be tiny and still fast enough for a real robot.",
+            },
+            quickQuiz("check", [
+              {
+                kind: "mcq",
+                id: "q1",
+                prompt: "During training, the loss going down means…",
+                options: [
+                  { id: "a", text: "The rover is driving faster" },
+                  { id: "b", text: "The network's answers match the examples better" },
+                  { id: "c", text: "There are fewer examples" },
+                ],
+                correct_option_id: "b",
+                explanation: "Loss is the average error between the network's answer and your choice.",
+              },
+              { kind: "true_false", id: "q2", statement: "A trained neural network keeps a copy of every example.", answer: false, explanation: "It keeps weights (numbers) that encode a rule, not the examples." },
+            ]),
+          ],
+        },
+      ],
+    },
+    {
+      id: u(302),
+      title: "Level 2 · Label, generalise, cope with noise",
+      description: "Harder arenas, less perfect data.",
+      lessons: [
+        {
+          id: u(3004),
+          version_id: u(7004),
+          slug: "teach-by-labelling",
+          title: "Project 4 · Teach by labelling",
+          summary: "Medium. No driving: the rover shows you a situation and you label the right move.",
+          estimated_minutes: 20,
+          blocks: [
+            sim("rover", {
+              title: "Teach by labelling",
+              goal: "This time you don't drive. The rover is dropped into a random spot in the slalom; read its sensors on the map and **label** what it should do. Label at least 30 situations, train, and let it run.",
+              arena: "slalom",
+              difficulty: 3,
+              mode: "label",
+              learner: "knn",
+              min_examples: 30,
+              sensor_noise: 0,
+              pass: { max_seconds: 40, max_bumps: 2 },
+              hints: ["Facing a post → turn toward the side with the longer ray.", "Nothing close → turn toward the flag (the flag bar shows which side it's on).", "Skip situations you're not sure about — a wrong label is worse than none."],
+            }),
+            reflect("notice", "Labelling vs. driving: which gave the rover better examples, and why?"),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## Labelled data\n\nMost real AI is trained on **labelled data**: photos someone tagged \"stop sign\", recordings someone typed out, sensor snapshots someone marked *turn left*. Labelling is slower than driving but gives **cleaner, more varied** examples — you can show the model rare situations on purpose.\n\nA wrong label teaches the model a wrong rule. That's why big AI projects check their labels carefully.",
+            },
+            quickQuiz("check", [
+              {
+                kind: "mcq",
+                id: "q1",
+                prompt: "Why might labelling give better training data than driving?",
+                options: [
+                  { id: "a", text: "You can cover rare situations on purpose" },
+                  { id: "b", text: "It records more examples per second" },
+                  { id: "c", text: "The model prefers short examples" },
+                ],
+                correct_option_id: "a",
+                explanation: "Random drops let you label situations driving rarely reaches.",
+              },
+            ]),
+          ],
+        },
+        {
+          id: u(3005),
+          version_id: u(7005),
+          slug: "escape-the-maze",
+          title: "Project 5 · Escape the maze",
+          summary: "Hard. Corridors and corners. Drive and label; the model must handle places you never visited.",
+          estimated_minutes: 30,
+          blocks: [
+            sim("rover", {
+              title: "Escape the maze",
+              goal: "Combine both ways of teaching: **drive** through the maze several times, then **label** random situations to fill the gaps. The network has to cope with corners it hasn't seen in exactly that way — that's called generalising.",
+              arena: "maze",
+              difficulty: 4,
+              mode: "both",
+              learner: "mlp",
+              min_examples: 120,
+              sensor_noise: 0,
+              pass: { max_seconds: 60, max_bumps: 6 },
+              hints: ["Keep a steady distance from walls while driving — the model learns your habits.", "If it turns the wrong way at a corner, label 10 situations near that corner.", "Accuracy below 75%? Your examples contradict each other — clear and drive more consistently."],
+            }),
+            reflect("notice", "Describe one situation where the rover did the right thing even though you never drove exactly there."),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## Generalising\n\nA model is only useful if it works in situations that are *similar but not identical* to its examples. That is **generalisation**, and it's the whole point of learning instead of memorising.\n\nTwo things help: **variety** (many different situations) and **consistency** (the same situation always gets the same action). Contradicting examples pull the network in two directions and its accuracy drops.",
+            },
+            quickQuiz("check", [
+              {
+                kind: "mcq",
+                id: "q1",
+                prompt: "The held-out accuracy is 60%. What does that tell you?",
+                options: [
+                  { id: "a", text: "The arena is too big" },
+                  { id: "b", text: "On unseen examples the model often disagrees with you — the data is thin or contradictory" },
+                  { id: "c", text: "Training ran too long" },
+                ],
+                correct_option_id: "b",
+                explanation: "Held-out accuracy checks the model on examples it didn't train on — an honest score.",
+              },
+            ]),
+          ],
+        },
+        {
+          id: u(3006),
+          version_id: u(7006),
+          slug: "noisy-delivery",
+          title: "Project 6 · Noisy delivery",
+          summary: "Hardest. Real sensors are fuzzy. Deliver through a cluttered yard with noisy readings.",
+          estimated_minutes: 30,
+          blocks: [
+            sim("rover", {
+              title: "Noisy delivery",
+              goal: "The sensors now have **noise** — every reading is a little wrong, like a real robot at night. Teach by driving and labelling, train the network, and deliver the parcel with at most 3 bumps.",
+              arena: "delivery",
+              difficulty: 5,
+              mode: "both",
+              learner: "mlp",
+              min_examples: 150,
+              sensor_noise: 0.1,
+              pass: { max_seconds: 60, max_bumps: 3 },
+              hints: ["Leave more room near posts — with noise, 'close' might be closer than it looks.", "Lots of examples average the noise out. Aim for 200+.", "Train again after adding examples; the network doesn't update on its own."],
+            }),
+            reflect("notice", "How did noise change the way you drove? What would you add to a real rover to make it more reliable?"),
+            {
+              id: "idea",
+              type: "rich_text",
+              phase: "module",
+              markdown:
+                "## Physical AI meets the real world\n\nReal sensors are never perfect: dust, sunlight, bumps and cheap parts all add **noise**. A model trained only on clean data breaks the moment reality is messy.\n\nRoboticists fight noise with **more data**, **smoother behaviour** (don't react to a single reading) and **better sensors**. The same ideas apply to any AI that acts in the world — from warehouse robots to self-driving cars.",
+            },
+            quickQuiz("check", [
+              {
+                kind: "true_false",
+                id: "q1",
+                statement: "With noisy sensors, more training examples usually help because the noise averages out.",
+                answer: true,
+                explanation: "Each example is a bit wrong in a random direction; many examples reveal the true pattern.",
+              },
+              {
+                kind: "mcq",
+                id: "q2",
+                prompt: "Which is NOT a way to make a real rover more reliable?",
+                options: [
+                  { id: "a", text: "Collect more varied examples" },
+                  { id: "b", text: "Only test it in the simulator" },
+                  { id: "c", text: "Use better sensors" },
+                ],
+                correct_option_id: "b",
+                explanation: "Simulators help, but the real world always adds surprises — test there too.",
+              },
+            ]),
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+export const courses: SeedCourse[] = [whatIsAi, aiExplorers, physicalAi];

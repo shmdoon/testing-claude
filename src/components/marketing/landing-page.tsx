@@ -83,7 +83,7 @@ export function LandingPage({ variant, interest }: { variant?: Campaign; interes
                 <Link href={primaryHref}>{variant?.ctaPrimary ?? t("marketing.ctaPrimary")}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#pricing">{t("marketing.ctaSecondary")}</Link>
+                <Link href="/playground">{t("marketing.ctaPlayground")}</Link>
               </Button>
             </div>
             <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-sm font-medium" aria-label="Highlights">
